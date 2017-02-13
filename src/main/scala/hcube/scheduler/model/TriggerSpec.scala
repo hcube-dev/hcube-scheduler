@@ -1,9 +1,13 @@
 package hcube.scheduler.model
 
-import java.time.Instant
+import java.time.{Instant, ZoneId, ZonedDateTime}
+
+import com.cronutils.model.CronType
+import com.cronutils.model.definition.CronDefinitionBuilder
+import com.cronutils.model.time.ExecutionTime
+import com.cronutils.parser.CronParser
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.duration._
 
 trait TriggerSpec {
 
@@ -11,15 +15,22 @@ trait TriggerSpec {
 
 }
 
-case class CronTriggerSpec(cron: Seq[String]) extends TriggerSpec {
+case class CronTriggerSpec(cron: String) extends TriggerSpec {
 
-  override def next(now: Instant): Option[Instant] = ???
+  val UtcZone = ZoneId.of("UTC")
+
+  private val parser = new CronParser(
+    CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ))
+  private val execTime = ExecutionTime.forCron(parser.parse(cron))
+
+  override def next(now: Instant): Option[Instant] =
+    Some(execTime.nextExecution(ZonedDateTime.ofInstant(now, UtcZone)).toInstant)
 
 }
 
 case class TimeTriggerSpec(
   start: Instant,
-  interval: Duration = 1 minute,
+  interval: Duration = Duration.Zero,
   repeat: Int = 1
 ) extends TriggerSpec {
 
