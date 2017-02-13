@@ -15,16 +15,17 @@ trait TriggerSpec {
 
 }
 
-case class CronTriggerSpec(cron: String) extends TriggerSpec {
+case class CronTriggerSpec(cron: String, cronType: String = "UNIX") extends TriggerSpec {
 
-  val UtcZone = ZoneId.of("UTC")
+  private val utcZone = ZoneId.of("UTC")
 
   private val parser = new CronParser(
-    CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ))
+    CronDefinitionBuilder.instanceDefinitionFor(CronType.valueOf(cronType)))
+
   private val execTime = ExecutionTime.forCron(parser.parse(cron))
 
   override def next(now: Instant): Option[Instant] =
-    Some(execTime.nextExecution(ZonedDateTime.ofInstant(now, UtcZone)).toInstant)
+    Some(execTime.nextExecution(ZonedDateTime.ofInstant(now, utcZone)).toInstant)
 
 }
 
