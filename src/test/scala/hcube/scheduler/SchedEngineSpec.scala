@@ -1,5 +1,5 @@
 package hcube.scheduler
 
-class SchedulerSpec {
+class SchedEngineSpec {
 
 }
