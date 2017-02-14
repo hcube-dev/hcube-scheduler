@@ -4,7 +4,7 @@ import hcube.scheduler.model.{ExecTrace, JobSpec}
 
 import scala.util.Try
 
-class EtcdSchedBackend extends SchedBackend {
+class EtcdBackend extends Backend {
 
   override def pullJobs(): Seq[JobSpec] = ???
 

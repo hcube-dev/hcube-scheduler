@@ -4,7 +4,7 @@ import hcube.scheduler.model.{ExecTrace, JobSpec}
 
 import scala.util.Try
 
-trait SchedBackend {
+trait Backend {
 
   def pullJobs(): Seq[JobSpec]
 
