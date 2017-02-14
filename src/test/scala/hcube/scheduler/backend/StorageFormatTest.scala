@@ -12,6 +12,7 @@ class StorageFormatTest extends Specification {
     val start = now.plusSeconds(60)
     val format = new JsonStorageFormat
     val jobSpec = JobSpec(
+      jobId = "asdf1234",
       triggers = Seq(TimeTriggerSpec(start), CronTriggerSpec("* * * * *")),
       creation = now,
 //      policy = RetryExecPolicy(RetryFailurePolicy()),
