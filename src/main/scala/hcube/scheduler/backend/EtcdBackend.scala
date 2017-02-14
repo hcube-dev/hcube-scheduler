@@ -14,7 +14,7 @@ class EtcdBackend(
   etcd: EtcdClient,
   format: StorageFormat,
   dir: String = "/hcube/scheduler",
-  charset: String = "ISO-8859-1"
+  charset: String = "UTF-8"
 )(
   implicit ec: ExecutionContext
 ) extends Backend {
