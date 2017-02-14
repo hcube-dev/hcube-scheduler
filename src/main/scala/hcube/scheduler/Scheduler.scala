@@ -1,12 +1,12 @@
 package hcube.scheduler
 
-trait SchedEngine {
+trait Scheduler {
 
   def apply(): Unit
 
 }
 
-class LoopSchedEngine extends SchedEngine {
+class LoopScheduler extends Scheduler {
 
   override def apply(): Unit = ???
 
