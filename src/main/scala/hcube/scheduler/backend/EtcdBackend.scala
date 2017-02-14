@@ -1,6 +1,6 @@
 package hcube.scheduler.backend
 
-import com.coreos.jetcd.EtcdKV
+import com.coreos.jetcd.EtcdClient
 import com.coreos.jetcd.options.GetOption
 import com.google.protobuf.ByteString
 import hcube.scheduler.model.{ExecTrace, JobSpec}
@@ -11,20 +11,22 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 class EtcdBackend(
-  etcd: EtcdKV,
+  etcd: EtcdClient,
   format: StorageFormat,
   dir: String = "/hcube/scheduler",
-  charset: String = "UTF-8"
+  charset: String = "ISO-8859-1"
 )(
   implicit ec: ExecutionContext
 ) extends Backend {
 
-  private val jobsKey = ByteString.copyFrom(dir + "/job", charset)
+  private val kvClient = etcd.getKVClient
+
+  private val jobsKey = ByteString.copyFrom(dir + "/job/", charset)
   private val endKey = ByteString.copyFrom("\0", charset)
   private val getRangeOption = GetOption.newBuilder().withRange(endKey).build()
 
   override def pullJobs(): Future[Seq[JobSpec]] = {
-    etcd
+    kvClient
       .get(jobsKey, getRangeOption)
       .asScala
       .map { response =>
