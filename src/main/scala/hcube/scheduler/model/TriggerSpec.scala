@@ -1,13 +1,13 @@
 package hcube.scheduler.model
 
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.{Duration, Instant, ZoneId, ZonedDateTime}
 
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.model.time.ExecutionTime
 import com.cronutils.parser.CronParser
 
-import scala.concurrent.duration.Duration
+
 
 trait TriggerSpec {
 
@@ -31,7 +31,7 @@ case class CronTriggerSpec(cron: String, cronType: String = "UNIX") extends Trig
 
 case class TimeTriggerSpec(
   start: Instant,
-  interval: Duration = Duration.Zero,
+  interval: Duration = Duration.ZERO,
   repeat: Int = 1
 ) extends TriggerSpec {
 

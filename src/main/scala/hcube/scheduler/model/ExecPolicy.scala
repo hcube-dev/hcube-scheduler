@@ -2,7 +2,17 @@ package hcube.scheduler.model
 
 import scala.concurrent.duration.Duration
 
-case class FailurePolicy(maxFailures: Int = 3)
+trait FailurePolicy {
+
+  def apply(): Unit
+
+}
+
+case class RetryFailurePolicy(maxFailures: Int = 3) extends FailurePolicy {
+
+  override def apply(): Unit = ???
+
+}
 
 trait ExecPolicy {
 
