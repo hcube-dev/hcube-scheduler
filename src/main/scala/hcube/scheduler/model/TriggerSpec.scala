@@ -6,6 +6,7 @@ import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.model.time.ExecutionTime
 import com.cronutils.parser.CronParser
+import hcube.scheduler.utils.TimeUtil
 
 
 
@@ -17,15 +18,13 @@ trait TriggerSpec {
 
 case class CronTriggerSpec(cron: String, cronType: String = "UNIX") extends TriggerSpec {
 
-  private val utcZone = ZoneId.of("UTC")
-
   private val parser = new CronParser(
     CronDefinitionBuilder.instanceDefinitionFor(CronType.valueOf(cronType)))
 
   private val execTime = ExecutionTime.forCron(parser.parse(cron))
 
   override def next(now: Instant): Option[Instant] =
-    Some(execTime.nextExecution(ZonedDateTime.ofInstant(now, utcZone)).toInstant)
+    Some(execTime.nextExecution(ZonedDateTime.ofInstant(now, TimeUtil.UTC)).toInstant)
 
 }
 
