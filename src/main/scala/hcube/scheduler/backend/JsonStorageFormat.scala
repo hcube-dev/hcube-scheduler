@@ -12,10 +12,10 @@ class JsonStorageFormat extends StorageFormat {
   implicit val formats = org.json4s.DefaultFormats +
     InstantSerializer + DurationSerializer + TriggerSpecSerializer
 
-  override def serialize(jobSpec: JobSpec): String = Serialization.write(jobSpec)
+  override def serialize(obj: AnyRef): String = Serialization.write(obj)
 
-  override def deserialize(json: String): JobSpec =
-    JsonMethods.parse(json, useBigDecimalForDouble = false).extract[JobSpec]
+  override def deserialize[T](json: String)(implicit mf: scala.reflect.Manifest[T]): T =
+    JsonMethods.parse(json, useBigDecimalForDouble = false).extract[T]
 
 }
 

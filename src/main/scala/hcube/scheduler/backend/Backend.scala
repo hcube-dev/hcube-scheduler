@@ -7,8 +7,10 @@ import scala.util.Try
 
 trait Backend {
 
+  case class UpdateResponse(success: Boolean, exec: ExecTrace)
+
   def pullJobs(): Future[Seq[JobSpec]]
 
-  def casUpdate(exec: ExecTrace): Try[ExecTrace]
+  def updateExecTxn(exec: ExecTrace): Future[UpdateResponse]
 
 }

@@ -22,7 +22,7 @@ class StorageFormatTest extends Specification {
     )
 
     val json = format.serialize(jobSpec)
-    val jobSpec2 = format.deserialize(json)
+    val jobSpec2 = format.deserialize[JobSpec](json)
 
     jobSpec must_== jobSpec2
   }

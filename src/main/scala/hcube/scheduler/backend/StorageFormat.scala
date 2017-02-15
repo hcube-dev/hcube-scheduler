@@ -1,11 +1,9 @@
 package hcube.scheduler.backend
 
-import hcube.scheduler.model.JobSpec
-
 trait StorageFormat {
 
-  def serialize(spec: JobSpec): String
+  def serialize(obj: AnyRef): String
 
-  def deserialize(str: String): JobSpec
+  def deserialize[T](text: String)(implicit mf: scala.reflect.Manifest[T]): T
 
 }
