@@ -2,7 +2,7 @@ package hcube.scheduler.backend
 
 import java.time.{Duration, Instant}
 
-import hcube.scheduler.model.{CronTriggerSpec, JobSpec, TimeTriggerSpec, TriggerSpec}
+import hcube.scheduler.model.{CronTriggerSpec, TimeTriggerSpec, TriggerSpec}
 import org.json4s.JsonDSL._
 import org.json4s.jackson.{JsonMethods, Serialization}
 import org.json4s.{CustomSerializer, JObject, MappingException, _}

@@ -1,6 +1,6 @@
 package hcube.scheduler.model
 
-import java.time.{Duration, Instant, ZoneId, ZonedDateTime}
+import java.time.{Duration, Instant, ZonedDateTime}
 
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
