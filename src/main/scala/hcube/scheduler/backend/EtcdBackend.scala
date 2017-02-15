@@ -41,9 +41,9 @@ class EtcdBackend(
       }
   }
 
-  override def updateCAS(
+  override def transitionCAS(
     prevStatus: String,
-    status: String,
+    newStatus: String,
     trace: ExecTrace
   ): Future[UpdateResponse] = {
     val jobId = trace.jobId
@@ -52,12 +52,16 @@ class EtcdBackend(
     val keyTrace = ByteString.copyFrom(dir + s"/exec/trace/$jobId/$time", charset)
 
     val prevStatusBS = ByteString.copyFrom(prevStatus, charset)
-    val statusBS = ByteString.copyFrom(status, charset)
+    val newStatusBS = ByteString.copyFrom(newStatus, charset)
 
-    val isExpectedPrev = new Cmp(keyStatus, Cmp.Op.EQUAL, CmpTarget.value(prevStatusBS))
+    val isExpectedPrev = if (prevStatus == "") {
+      new Cmp(keyStatus, Cmp.Op.EQUAL, CmpTarget.version(0))
+    } else {
+      new Cmp(keyStatus, Cmp.Op.EQUAL, CmpTarget.value(prevStatusBS))
+    }
 
     val txn = Txn.newBuilder().If(isExpectedPrev).Then(
-      Op.put(keyStatus, statusBS, PutOption.DEFAULT),
+      Op.put(keyStatus, newStatusBS, PutOption.DEFAULT),
       Op.put(keyTrace, ByteString.copyFrom(format.serialize(trace), charset), PutOption.DEFAULT)
     ).build()
 
@@ -65,19 +69,9 @@ class EtcdBackend(
       .commit(txn)
       .asScala
       .map { response =>
-        val success = !response.getSucceeded && response.getResponsesCount == 2
+        val success = response.getSucceeded && response.getResponsesCount == 2
         UpdateResponse(success, trace)
       }
-  }
-
-  override def updateExec(trace: ExecTrace): Future[ExecTrace] = {
-    val jobId = trace.jobId
-    val time = trace.time.toEpochMilli
-    val keyTrace = ByteString.copyFrom(dir + s"/exec/trace/$jobId/$time", charset)
-    kvClient
-      .put(keyTrace, ByteString.copyFrom(format.serialize(trace), charset), PutOption.DEFAULT)
-      .asScala
-      .map { _ => trace }
   }
 
 }
