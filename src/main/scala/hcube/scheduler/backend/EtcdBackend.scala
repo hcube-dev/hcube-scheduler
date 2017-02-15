@@ -30,8 +30,6 @@ class EtcdBackend(
     .withRange(endKey)
     .build()
 
-  private val successValue = ByteString.copyFrom("success", charset)
-
   override def pullJobs(): Future[Seq[JobSpec]] = {
     kvClient
       .get(jobsKey, getRangeOption)
@@ -43,15 +41,23 @@ class EtcdBackend(
       }
   }
 
-  override def updateExecCAS(trace: ExecTrace): Future[UpdateResponse] = {
+  override def updateCAS(
+    prevStatus: String,
+    status: String,
+    trace: ExecTrace
+  ): Future[UpdateResponse] = {
     val jobId = trace.jobId
     val time = trace.time.toEpochMilli
     val keyStatus = ByteString.copyFrom(dir + s"/exec/status/$jobId/$time", charset)
     val keyTrace = ByteString.copyFrom(dir + s"/exec/trace/$jobId/$time", charset)
-    val isSuccess = new Cmp(keyStatus, Cmp.Op.EQUAL, CmpTarget.value(successValue))
 
-    val txn = Txn.newBuilder().If(isSuccess).Else(
-      Op.put(keyStatus, successValue, PutOption.DEFAULT),
+    val prevStatusBS = ByteString.copyFrom(prevStatus, charset)
+    val statusBS = ByteString.copyFrom(status, charset)
+
+    val isExpectedPrev = new Cmp(keyStatus, Cmp.Op.EQUAL, CmpTarget.value(prevStatusBS))
+
+    val txn = Txn.newBuilder().If(isExpectedPrev).Then(
+      Op.put(keyStatus, statusBS, PutOption.DEFAULT),
       Op.put(keyTrace, ByteString.copyFrom(format.serialize(trace), charset), PutOption.DEFAULT)
     ).build()
 

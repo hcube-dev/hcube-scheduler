@@ -11,7 +11,7 @@ import scala.concurrent.{Await, ExecutionContext}
 
 class EtcdBackendTest extends Specification {
 
-  args(skipAll = true)
+//  args(skipAll = true)
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
@@ -34,8 +34,8 @@ class EtcdBackendTest extends Specification {
 
   "update CAS" >> {
     val time = ts("2017-01-06T11:17:07UTC")
-    val trace = ExecTrace("asdf2", time, Nil)
-    val future = backend.updateExecCAS(trace)
+    val trace = ExecTrace("qwer2", time, Nil)
+    val future = backend.updateCAS("", "running", trace)
     val result = Await.result(future, Duration.Inf)
 
     1 must_== 1

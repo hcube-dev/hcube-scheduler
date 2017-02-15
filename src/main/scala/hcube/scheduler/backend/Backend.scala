@@ -11,7 +11,7 @@ trait Backend {
 
   def pullJobs(): Future[Seq[JobSpec]]
 
-  def updateExecCAS(trace: ExecTrace): Future[UpdateResponse]
+  def updateCAS(prevStatus: String, status: String, trace: ExecTrace): Future[UpdateResponse]
 
   def updateExec(trace: ExecTrace): Future[ExecTrace]
 
