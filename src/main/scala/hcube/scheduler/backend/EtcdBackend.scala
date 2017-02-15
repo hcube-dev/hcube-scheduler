@@ -43,16 +43,16 @@ class EtcdBackend(
       }
   }
 
-  override def updateExecTxn(exec: ExecTrace): Future[UpdateResponse] = {
-    val jobId = exec.jobId
-    val time = exec.time.toEpochMilli
+  override def updateExecCAS(trace: ExecTrace): Future[UpdateResponse] = {
+    val jobId = trace.jobId
+    val time = trace.time.toEpochMilli
     val keyStatus = ByteString.copyFrom(dir + s"/exec/status/$jobId/$time", charset)
     val keyTrace = ByteString.copyFrom(dir + s"/exec/trace/$jobId/$time", charset)
     val isSuccess = new Cmp(keyStatus, Cmp.Op.EQUAL, CmpTarget.value(successValue))
 
     val txn = Txn.newBuilder().If(isSuccess).Else(
       Op.put(keyStatus, successValue, PutOption.DEFAULT),
-      Op.put(keyTrace, ByteString.copyFrom(format.serialize(exec), charset), PutOption.DEFAULT)
+      Op.put(keyTrace, ByteString.copyFrom(format.serialize(trace), charset), PutOption.DEFAULT)
     ).build()
 
     kvClient
@@ -60,8 +60,18 @@ class EtcdBackend(
       .asScala
       .map { response =>
         val success = !response.getSucceeded && response.getResponsesCount == 2
-        UpdateResponse(success, exec)
+        UpdateResponse(success, trace)
       }
+  }
+
+  override def updateExec(trace: ExecTrace): Future[ExecTrace] = {
+    val jobId = trace.jobId
+    val time = trace.time.toEpochMilli
+    val keyTrace = ByteString.copyFrom(dir + s"/exec/trace/$jobId/$time", charset)
+    kvClient
+      .put(keyTrace, ByteString.copyFrom(format.serialize(trace), charset), PutOption.DEFAULT)
+      .asScala
+      .map { _ => trace }
   }
 
 }

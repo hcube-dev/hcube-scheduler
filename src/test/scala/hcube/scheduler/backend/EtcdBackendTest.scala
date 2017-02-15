@@ -32,11 +32,11 @@ class EtcdBackendTest extends Specification {
     1 must_== 1
   }
 
-  "update txn" >> {
+  "update CAS" >> {
     val time = ts("2017-01-06T11:17:07UTC")
-    val execTrace = ExecTrace("asdf2", time, Nil)
-    val future2 = backend.updateExecTxn(execTrace)
-    val result = Await.result(future2, Duration.Inf)
+    val trace = ExecTrace("asdf2", time, Nil)
+    val future = backend.updateExecCAS(trace)
+    val result = Await.result(future, Duration.Inf)
 
     1 must_== 1
   }
