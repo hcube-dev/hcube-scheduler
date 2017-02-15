@@ -1,6 +1,7 @@
 package hcube.scheduler.backend
 
 import com.coreos.jetcd.EtcdClient
+import com.coreos.jetcd.api.RangeRequest
 import com.coreos.jetcd.op.{Cmp, CmpTarget, Op, Txn}
 import com.coreos.jetcd.options.{GetOption, PutOption}
 import com.google.protobuf.ByteString
@@ -22,8 +23,12 @@ class EtcdBackend(
   private val kvClient = etcd.getKVClient
 
   private val jobsKey = ByteString.copyFrom(dir + "/job/", charset)
-  private val endKey = ByteString.copyFrom(dir + "/job/ZZZ", charset)
-  private val getRangeOption = GetOption.newBuilder().withRange(endKey).build()
+  private val endKey = ByteString.copyFrom(dir + "/job/zzz", charset)
+  private val getRangeOption = GetOption.newBuilder()
+    .withSortField(RangeRequest.SortTarget.KEY)
+    .withSortOrder(RangeRequest.SortOrder.ASCEND)
+    .withRange(endKey)
+    .build()
 
   private val successValue = ByteString.copyFrom("success", charset)
 
