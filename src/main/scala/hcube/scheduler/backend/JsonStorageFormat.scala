@@ -2,17 +2,18 @@ package hcube.scheduler.backend
 
 import java.time.{Duration, Instant}
 
-import hcube.scheduler.model.{CronTriggerSpec, TimeTriggerSpec, TriggerSpec}
+import hcube.scheduler.model._
 import org.json4s.JsonDSL._
-import org.json4s.jackson.{JsonMethods, Serialization}
+import org.json4s.jackson.JsonMethods
+import org.json4s.jackson.Serialization.{read, write}
 import org.json4s.{CustomSerializer, JObject, MappingException, _}
 
 class JsonStorageFormat extends StorageFormat {
 
-  implicit val formats = org.json4s.DefaultFormats +
-    InstantSerializer + DurationSerializer + TriggerSpecSerializer
+  implicit val formats = DefaultFormats + InstantSerializer + DurationSerializer +
+    TriggerSpecSerializer + ExecPolicySerializer + FailurePolicySerializer
 
-  override def serialize(obj: AnyRef): String = Serialization.write(obj)
+  override def serialize(obj: AnyRef): String = write(obj)
 
   override def deserialize[T](json: String)(implicit mf: scala.reflect.Manifest[T]): T =
     JsonMethods.parse(json, useBigDecimalForDouble = false).extract[T]
@@ -22,8 +23,7 @@ class JsonStorageFormat extends StorageFormat {
 object TriggerSpecSerializer extends CustomSerializer[TriggerSpec](format => (
   {
     case obj: JObject =>
-      implicit val formats = org.json4s.DefaultFormats +
-        InstantSerializer + DurationSerializer
+      implicit val formats = DefaultFormats + InstantSerializer + DurationSerializer
       val triggerType = (obj \ "triggerType").extract[String]
       triggerType match {
         case "cron" =>
@@ -40,7 +40,7 @@ object TriggerSpecSerializer extends CustomSerializer[TriggerSpec](format => (
   },
   {
     case triggerSpec: TriggerSpec =>
-      implicit val formats = org.json4s.DefaultFormats
+      implicit val formats = DefaultFormats
       triggerSpec match {
         case CronTriggerSpec(cron, cronType) =>
           ("triggerType" -> "cron") ~
@@ -55,7 +55,60 @@ object TriggerSpecSerializer extends CustomSerializer[TriggerSpec](format => (
   }
 ))
 
-case object InstantSerializer extends CustomSerializer[Instant](format => (
+object FailurePolicySerializer extends CustomSerializer[FailurePolicy](format => (
+  {
+    case obj: JObject =>
+      implicit val formats = DefaultFormats
+      val policyType = (obj \ "failurePolicyType").extract[String]
+      policyType match {
+        case "retry" =>
+          val maxFailures = (obj \ "maxFailures").extract[Int]
+          RetryFailurePolicy(maxFailures)
+      }
+  },
+  {
+    case policy: FailurePolicy =>
+      policy match {
+        case RetryFailurePolicy(maxFailures) =>
+          ("failurePolicyType" -> "retry") ~
+          ("maxFailures" -> maxFailures)
+      }
+  }
+))
+
+object ExecPolicySerializer extends CustomSerializer[ExecPolicy](format => (
+  {
+    case obj: JObject =>
+      implicit val formats = DefaultFormats + FailurePolicySerializer + DurationSerializer
+      val policyType = (obj \ "execPolicyType").extract[String]
+      policyType match {
+        case "current" =>
+          val failurePolicy = (obj \ "failurePolicy").extract[FailurePolicy]
+          CurrentExecPolicy(failurePolicy)
+        case "retry" =>
+          val failurePolicy = read[FailurePolicy]((obj \ "failurePolicy").extract[String])
+          val limit = (obj \ "limit").extract[Int]
+          val retryPeriod = read[Duration]((obj \ "retryPeriod").extract[String])
+          RetryExecPolicy(failurePolicy, limit, retryPeriod)
+      }
+  },
+  {
+    case policy: ExecPolicy =>
+      implicit val formats = DefaultFormats + FailurePolicySerializer + DurationSerializer
+      policy match {
+        case CurrentExecPolicy(failurePolicy) =>
+          ("execPolicyType" -> "current") ~
+          ("failurePolicy" -> write(failurePolicy))
+        case RetryExecPolicy(failurePolicy, limit, retryPeriod) =>
+          ("execPolicyType" -> "retry") ~
+          ("failurePolicy" -> write(failurePolicy)) ~
+          ("limit" -> limit) ~
+          ("retryPeriod" -> write(retryPeriod))
+      }
+  }
+))
+
+object InstantSerializer extends CustomSerializer[Instant](format => (
   {
     case JInt(i) => Instant.ofEpochMilli(i.longValue)
     case JNull => null
@@ -65,7 +118,7 @@ case object InstantSerializer extends CustomSerializer[Instant](format => (
   }
 ))
 
-case object DurationSerializer extends CustomSerializer[Duration](format => (
+object DurationSerializer extends CustomSerializer[Duration](format => (
   {
     case JInt(i) => Duration.ofMillis(i.longValue)
     case JNull => null

@@ -15,7 +15,7 @@ class StorageFormatTest extends Specification {
       jobId = "asdf1234",
       triggers = Seq(TimeTriggerSpec(start), CronTriggerSpec("* * * * *")),
       creation = now,
-//      policy = RetryExecPolicy(RetryFailurePolicy()),
+      policy = RetryExecPolicy(RetryFailurePolicy()),
       typ = "http",
       name = Some("name"),
       payload = Map[String, Any]("foo" -> 1, "bar" -> 2)
