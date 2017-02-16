@@ -80,6 +80,7 @@ class LoopScheduler(
             backend.transition(RunningState, FailureState,
               trace.copy(history = failureExecState :: trace.history))
         }
+      case TransitionFailed(_) => ()
     }
   }
 
