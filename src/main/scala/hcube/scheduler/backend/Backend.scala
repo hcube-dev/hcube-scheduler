@@ -17,8 +17,10 @@ trait Backend {
 
 object Backend {
 
-  trait TransitionResult
+  sealed trait TransitionResult
+
   case class TransitionSuccess(trace: ExecTrace) extends TransitionResult
+
   case class TransitionFailed(trace: ExecTrace) extends TransitionResult
 
   val InitialState = ""
