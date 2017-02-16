@@ -12,15 +12,13 @@ trait JobSpecCache extends Backend {
 
   val lifetimeMillis: Int
 
-  @volatile private[backend] var cacheState = CacheState(Nil, None, Seq.empty, 0)
+  @volatile private[backend] var cacheState = CacheState(Empty, None, Nil, 0)
 
   abstract override def pullJobs(): Future[Seq[JobSpec]] = {
     val currentState = cacheState
     val state = updateCacheState(currentState, System.currentTimeMillis(), super.pullJobs())
-      .map(newState => {
-        updateInternalState(currentState, newState)
-        newState
-      }).getOrElse(currentState)
+      .map(newState => updateInternalState(currentState, newState))
+      .getOrElse(currentState)
     Future.successful(state.cache)
   }
 
@@ -35,7 +33,7 @@ trait JobSpecCache extends Backend {
     }), state.cache, state.lastUpdate)
 
     state.state match {
-      case Nil => Some(update())
+      case Empty => Some(update())
       case Cached =>
         if (isOutOfDate(state, now)) {
           Some(update())
@@ -50,7 +48,10 @@ trait JobSpecCache extends Backend {
     cacheState.lastUpdate + lifetimeMillis < currentTime
   }
 
-  private[backend] def updateInternalState(oldState: CacheState, newState: CacheState): Unit = {
+  private[backend] def updateInternalState(
+    oldState: CacheState,
+    newState: CacheState
+  ): CacheState = {
     cacheState = newState
     // Updates the state to a next one if there is a pending next state request.
     newState.nextState.foreach(future => {
@@ -63,7 +64,14 @@ trait JobSpecCache extends Backend {
           cacheState = oldState
       }
     })
+    cacheState
   }
+
+}
+
+private object JobSpecCache {
+
+  private val logger = Logger(getClass)
 
   private[backend] sealed trait State
 
@@ -71,7 +79,7 @@ trait JobSpecCache extends Backend {
 
   private[backend] case object Cached extends State
 
-  private[backend] case object Nil extends State
+  private[backend] case object Empty extends State
 
   private[backend] case class CacheState(
     state: State,
@@ -80,8 +88,4 @@ trait JobSpecCache extends Backend {
     lastUpdate: Long
   )
 
-}
-
-private object JobSpecCache {
-  private val logger = Logger(getClass)
 }
