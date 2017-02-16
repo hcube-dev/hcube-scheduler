@@ -23,5 +23,7 @@ object Backend {
 
   val InitialState = ""
   val RunningState = "running"
+  val SuccessState = "success"
+  val FailureState = "failure"
 
 }

@@ -6,4 +6,4 @@ case class ExecTrace(
   history: Seq[ExecState]
 )
 
-case class ExecState(state: String, time: Long)
+case class ExecState(state: String, time: Long, msg: String = "")

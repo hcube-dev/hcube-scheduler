@@ -10,6 +10,8 @@ import hcube.scheduler.utils.TimeUtil.TimeMillisFn
 import scala.annotation.tailrec
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success, Try}
+import scala.compat.Platform._
 
 trait Scheduler {
 
@@ -63,9 +65,21 @@ class LoopScheduler(
   }
 
   private def execute(time: Long, jobSpec: JobSpec): Unit = {
-    val trace = ExecTrace(jobSpec.jobId, time, Seq(ExecState(RunningState, time)))
+    val runningExecState = ExecState(RunningState, currentTimeMillis())
+    val trace = ExecTrace(jobSpec.jobId, time, Seq(runningExecState))
     backend.transition(InitialState, RunningState, trace).foreach {
-      case TransitionSuccess(_) => jobDispatch(jobSpec.typ)(time, jobSpec.payload)
+      case TransitionSuccess(_) =>
+        Try(jobDispatch(jobSpec.typ)(time, jobSpec.payload)) match {
+          case _: Success[Unit] =>
+            val successExecState = ExecState(SuccessState, currentTimeMillis())
+            backend.transition(RunningState, SuccessState,
+              trace.copy(history = trace.history :+ successExecState))
+          case Failure(e) =>
+            val msg = e.getMessage + EOL + e.getStackTrace.mkString("", EOL, EOL)
+            val failureExecState = ExecState(FailureState, currentTimeMillis(), msg)
+            backend.transition(RunningState, FailureState,
+              trace.copy(history = trace.history :+ failureExecState))
+        }
     }
   }
 
