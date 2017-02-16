@@ -14,10 +14,11 @@ trait Scheduler {
 class LoopScheduler(
   backend: Backend,
   delta: Long = 1000,
-  tolerance: Long = 50
+  tolerance: Long = 50,
+  currentTimeMillis: () => Long = System.currentTimeMillis
 ) extends Scheduler {
 
-  override def apply(): Unit = loop(System.currentTimeMillis())
+  override def apply(): Unit = loop(currentTimeMillis())
 
   private def nextInterval(now: Long): Long = (now / delta) * delta + delta
 
@@ -39,7 +40,7 @@ class LoopScheduler(
 
     processJobs(t0, t1)
 
-    loop(System.currentTimeMillis())
+    loop(currentTimeMillis())
   }
 
   private def processJobs(t0: Long, t1: Long): Unit = {
