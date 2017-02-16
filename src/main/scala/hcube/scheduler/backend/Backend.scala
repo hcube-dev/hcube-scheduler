@@ -2,10 +2,11 @@ package hcube.scheduler.backend
 
 import hcube.scheduler.model.{ExecTrace, JobSpec}
 
-import scala.concurrent.Future
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future}
 
 trait Backend {
+
+  implicit val ec: ExecutionContext
 
   case class UpdateResponse(success: Boolean, trace: ExecTrace)
 

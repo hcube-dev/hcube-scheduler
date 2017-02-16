@@ -17,7 +17,7 @@ class EtcdBackend(
   dir: String = "/hcube/scheduler",
   charset: String = "UTF-8"
 )(
-  implicit ec: ExecutionContext
+  implicit override val ec: ExecutionContext
 ) extends Backend {
 
   private val kvClient = etcd.getKVClient
