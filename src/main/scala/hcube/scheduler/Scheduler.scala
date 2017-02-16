@@ -39,12 +39,12 @@ class LoopScheduler(
       TimeUtil.sleep(diff, currentTimeMillis)
     }
 
-    processJobs(t0, t1)
+    tick(t0, t1)
 
     loop(currentTimeMillis())
   }
 
-  private def processJobs(t0: Long, t1: Long): Unit = {
+  private def tick(t0: Long, t1: Long): Unit = {
 
   }
 
