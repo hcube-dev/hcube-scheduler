@@ -7,7 +7,7 @@ import scala.util.{Failure, Success, Try}
 
 object TimeUtil {
 
-  val UTC = ZoneId.of("UTC")
+  val UTC: ZoneId = ZoneId.of("UTC")
 
   @tailrec def sleep(ms: Long): Unit = {
     val t0 = System.currentTimeMillis()
