@@ -1,14 +1,14 @@
 package hcube.scheduler
 
-import java.time.Instant
-
 import hcube.scheduler.backend.Backend
-import hcube.scheduler.model.JobSpec
+import hcube.scheduler.backend.Backend._
+import hcube.scheduler.job.Job
+import hcube.scheduler.model.{ExecState, ExecTrace, JobSpec}
 import hcube.scheduler.utils.TimeUtil
 import hcube.scheduler.utils.TimeUtil.TimeMillisFn
 
 import scala.annotation.tailrec
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
 
 trait Scheduler {
@@ -21,7 +21,10 @@ class LoopScheduler(
   backend: Backend,
   delta: Long = 1000,
   tolerance: Long = 50,
-  currentTimeMillis: TimeMillisFn = System.currentTimeMillis
+  currentTimeMillis: TimeMillisFn = System.currentTimeMillis,
+  jobDispatch: (String) => Job = Job.apply
+)(
+  implicit val ec: ExecutionContext
 ) extends Scheduler {
 
   override def apply(): Unit = loop(currentTimeMillis())
@@ -60,7 +63,10 @@ class LoopScheduler(
   }
 
   private def execute(time: Long, jobSpec: JobSpec): Unit = {
-
+    val trace = ExecTrace(jobSpec.jobId, time, Seq(ExecState(RunningState, time)))
+    backend.transition(InitialState, RunningState, trace).foreach {
+      case TransitionSuccess(_) => jobDispatch(jobSpec.typ)(time, jobSpec.payload)
+    }
   }
 
 }

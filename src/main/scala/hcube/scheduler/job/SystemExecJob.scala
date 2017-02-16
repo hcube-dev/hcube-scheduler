@@ -1,9 +1,7 @@
 package hcube.scheduler.job
 
-import java.time.Instant
+object SystemExecJob extends Job {
 
-class SystemExecJob extends Job {
-
-  override def apply(time: Instant, payload: Map[String, Any]): Unit = ???
+  override def apply(time: Long, payload: Map[String, Any]): Unit = ???
 
 }

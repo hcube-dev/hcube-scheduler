@@ -1,5 +1,6 @@
 package hcube.scheduler.backend
 
+import hcube.scheduler.backend.Backend._
 import hcube.scheduler.model.{ExecTrace, JobSpec}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -8,10 +9,19 @@ trait Backend {
 
   implicit val ec: ExecutionContext
 
-  case class UpdateResponse(success: Boolean, trace: ExecTrace)
-
   def pullJobs(): Future[Seq[JobSpec]]
 
-  def transitionCAS(prevStatus: String, newStatus: String, trace: ExecTrace): Future[UpdateResponse]
+  def transition(prevState: String, newState: String, trace: ExecTrace): Future[TransitionResult]
+
+}
+
+object Backend {
+
+  trait TransitionResult
+  case class TransitionSuccess(trace: ExecTrace) extends TransitionResult
+  case class TransitionFailed(trace: ExecTrace) extends TransitionResult
+
+  val InitialState = ""
+  val RunningState = "running"
 
 }

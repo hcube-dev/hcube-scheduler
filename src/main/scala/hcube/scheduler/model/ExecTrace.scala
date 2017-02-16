@@ -1,11 +1,9 @@
 package hcube.scheduler.model
 
-import java.time.Instant
-
 case class ExecTrace(
   jobId: String,
-  time: Instant,
-  history: Seq[ExecStatus]
+  time: Long,
+  history: Seq[ExecState]
 )
 
-case class ExecStatus(status: String, time: Instant)
+case class ExecState(state: String, time: Long)

@@ -33,9 +33,9 @@ class EtcdBackendTest extends Specification {
   }
 
   "update CAS" >> {
-    val time = ts("2017-01-06T11:17:07UTC")
+    val time = ts("2017-01-06T11:17:07UTC").toEpochMilli
     val trace = ExecTrace("qwer5", time, Nil)
-    val future = backend.transitionCAS("running", "success", trace)
+    val future = backend.transition("running", "success", trace)
     val result = Await.result(future, Duration.Inf)
 
     1 must_== 1

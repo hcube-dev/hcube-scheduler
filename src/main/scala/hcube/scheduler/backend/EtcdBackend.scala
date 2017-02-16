@@ -5,6 +5,7 @@ import com.coreos.jetcd.api.RangeRequest
 import com.coreos.jetcd.op.{Cmp, CmpTarget, Op, Txn}
 import com.coreos.jetcd.options.{GetOption, PutOption}
 import com.google.protobuf.ByteString
+import hcube.scheduler.backend.Backend.{TransitionFailed, TransitionResult, TransitionSuccess}
 import hcube.scheduler.model.{ExecTrace, JobSpec}
 import hcube.scheduler.utils.ListenableFutureUtil._
 
@@ -41,20 +42,20 @@ class EtcdBackend(
       }
   }
 
-  override def transitionCAS(
-    prevStatus: String,
-    newStatus: String,
+  override def transition(
+    prevState: String,
+    newState: String,
     trace: ExecTrace
-  ): Future[UpdateResponse] = {
+  ): Future[TransitionResult] = {
     val jobId = trace.jobId
-    val time = trace.time.toEpochMilli
+    val time = trace.time
     val keyStatus = ByteString.copyFrom(dir + s"/exec/status/$jobId/$time", charset)
     val keyTrace = ByteString.copyFrom(dir + s"/exec/trace/$jobId/$time", charset)
 
-    val prevStatusBS = ByteString.copyFrom(prevStatus, charset)
-    val newStatusBS = ByteString.copyFrom(newStatus, charset)
+    val prevStatusBS = ByteString.copyFrom(prevState, charset)
+    val newStatusBS = ByteString.copyFrom(newState, charset)
 
-    val isExpectedPrev = if (prevStatus == "") {
+    val isExpectedPrev = if (prevState == "") {
       new Cmp(keyStatus, Cmp.Op.EQUAL, CmpTarget.version(0))
     } else {
       new Cmp(keyStatus, Cmp.Op.EQUAL, CmpTarget.value(prevStatusBS))
@@ -69,8 +70,11 @@ class EtcdBackend(
       .commit(txn)
       .asScala
       .map { response =>
-        val success = response.getSucceeded && response.getResponsesCount == 2
-        UpdateResponse(success, trace)
+        if (response.getSucceeded && response.getResponsesCount == 2) {
+          TransitionSuccess(trace)
+        } else {
+          TransitionFailed(trace)
+        }
       }
   }
 
