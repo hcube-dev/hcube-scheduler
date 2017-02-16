@@ -10,9 +10,9 @@ trait JobSpecCache extends Backend {
 
   import JobSpecCache._
 
-  val lifetime: Int
+  val lifetimeMillis: Int
 
-  @volatile private[backend] var cacheState = CacheState(Empty, None, Seq.empty, 0)
+  @volatile private[backend] var cacheState = CacheState(Nil, None, Seq.empty, 0)
 
   abstract override def pullJobs(): Future[Seq[JobSpec]] = {
     val currentState = cacheState
@@ -31,12 +31,12 @@ trait JobSpecCache extends Backend {
   ): Option[CacheState] = {
 
     def update() = CacheState(Updating, Some(fn.map {
-      jobSpecs => CacheState(Full, None, jobSpecs, now)
+      jobSpecs => CacheState(Cached, None, jobSpecs, now)
     }), state.cache, state.lastUpdate)
 
     state.state match {
-      case Empty => Some(update())
-      case Full =>
+      case Nil => Some(update())
+      case Cached =>
         if (isOutOfDate(state, now)) {
           Some(update())
         } else {
@@ -47,7 +47,7 @@ trait JobSpecCache extends Backend {
   }
 
   private[backend] def isOutOfDate(cacheState: CacheState, currentTime: Long): Boolean = {
-    cacheState.lastUpdate + lifetime < currentTime
+    cacheState.lastUpdate + lifetimeMillis < currentTime
   }
 
   private[backend] def updateInternalState(oldState: CacheState, newState: CacheState): Unit = {
@@ -69,9 +69,9 @@ trait JobSpecCache extends Backend {
 
   private[backend] case object Updating extends State
 
-  private[backend] case object Full extends State
+  private[backend] case object Cached extends State
 
-  private[backend] case object Empty extends State
+  private[backend] case object Nil extends State
 
   private[backend] case class CacheState(
     state: State,

@@ -16,7 +16,7 @@ class JobSpecCacheTest extends Specification {
       .build()
     val jsonFormat = new JsonStorageFormat
     val backend = new EtcdBackend(client, jsonFormat) with JobSpecCache {
-      val lifetime = 5
+      val lifetimeMillis = 5
     }
     backend.pullJobs()
     1 must_== 1
