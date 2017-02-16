@@ -66,19 +66,19 @@ class LoopScheduler(
 
   private def execute(time: Long, jobSpec: JobSpec): Unit = {
     val runningExecState = ExecState(RunningState, currentTimeMillis())
-    val trace = ExecTrace(jobSpec.jobId, time, Seq(runningExecState))
+    val trace = ExecTrace(jobSpec.jobId, time, List(runningExecState))
     backend.transition(InitialState, RunningState, trace).foreach {
       case TransitionSuccess(_) =>
         Try(jobDispatch(jobSpec.typ)(time, jobSpec.payload)) match {
           case _: Success[Unit] =>
             val successExecState = ExecState(SuccessState, currentTimeMillis())
             backend.transition(RunningState, SuccessState,
-              trace.copy(history = trace.history :+ successExecState))
+              trace.copy(history = successExecState :: trace.history))
           case Failure(e) =>
             val msg = e.getMessage + EOL + e.getStackTrace.mkString("", EOL, EOL)
             val failureExecState = ExecState(FailureState, currentTimeMillis(), msg)
             backend.transition(RunningState, FailureState,
-              trace.copy(history = trace.history :+ failureExecState))
+              trace.copy(history = failureExecState :: trace.history))
         }
     }
   }
