@@ -2,6 +2,7 @@ package hcube.scheduler
 
 import hcube.scheduler.backend.Backend
 import hcube.scheduler.utils.TimeUtil
+import hcube.scheduler.utils.TimeUtil.TimeMillisFn
 
 import scala.annotation.tailrec
 
@@ -15,7 +16,7 @@ class LoopScheduler(
   backend: Backend,
   delta: Long = 1000,
   tolerance: Long = 50,
-  currentTimeMillis: () => Long = System.currentTimeMillis
+  currentTimeMillis: TimeMillisFn = System.currentTimeMillis
 ) extends Scheduler {
 
   override def apply(): Unit = loop(currentTimeMillis())
@@ -35,7 +36,7 @@ class LoopScheduler(
     val diff = t0 - now
     if (diff > tolerance) {
       // sleep until interval starts
-      TimeUtil.sleep(diff)
+      TimeUtil.sleep(diff, currentTimeMillis)
     }
 
     processJobs(t0, t1)
