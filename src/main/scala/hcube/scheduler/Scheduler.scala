@@ -38,9 +38,13 @@ class LoopScheduler(
       TimeUtil.sleep(t1 - now)
     }
 
-    // TODO process jobs
+    processJobs(t0, t1)
 
     loop(t1)
+  }
+
+  private def processJobs(t0: Long, t1: Long): Unit = {
+
   }
 
 }
