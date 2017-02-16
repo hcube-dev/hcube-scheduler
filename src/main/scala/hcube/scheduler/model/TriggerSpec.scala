@@ -1,6 +1,6 @@
 package hcube.scheduler.model
 
-import java.time.{Duration, Instant, ZonedDateTime}
+import java.time.{Instant, ZonedDateTime}
 
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
@@ -12,7 +12,7 @@ import hcube.scheduler.utils.TimeUtil
 
 trait TriggerSpec {
 
-  def next(now: Instant): Option[Instant]
+  def next(now: Long): Option[Long]
 
 }
 
@@ -23,27 +23,26 @@ case class CronTriggerSpec(cron: String, cronType: String = "UNIX") extends Trig
 
   private val execTime = ExecutionTime.forCron(parser.parse(cron))
 
-  override def next(now: Instant): Option[Instant] =
-    Some(execTime.nextExecution(ZonedDateTime.ofInstant(now, TimeUtil.UTC)).toInstant)
+  override def next(now: Long): Option[Long] = {
+    val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(now), TimeUtil.UTC)
+    Some(execTime.nextExecution(dateTime).toInstant.toEpochMilli)
+  }
 
 }
 
 case class TimeTriggerSpec(
-  start: Instant,
-  interval: Duration = Duration.ZERO,
+  startMillis: Long,
+  intervalMillis: Long = 0,
   repeat: Int = 1
 ) extends TriggerSpec {
 
-  private val startMillis = start.toEpochMilli
-  private val intervalMillis = interval.toMillis
-
-  override def next(now: Instant): Option[Instant] = {
-    if (start == now || start.isAfter(now)) {
-      Some(start)
+  override def next(now: Long): Option[Long] = {
+    if (startMillis >= now) {
+      Some(startMillis)
     } else {
-      val diff = (now.toEpochMilli - startMillis) / intervalMillis
+      val diff = (now - startMillis) / intervalMillis
       if (diff < repeat) {
-        Some(start.plusMillis((diff + 1) * intervalMillis))
+        Some(startMillis + (diff + 1) * intervalMillis)
       } else {
         None
       }

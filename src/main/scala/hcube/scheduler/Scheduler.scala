@@ -1,10 +1,15 @@
 package hcube.scheduler
 
+import java.time.Instant
+
 import hcube.scheduler.backend.Backend
+import hcube.scheduler.model.JobSpec
 import hcube.scheduler.utils.TimeUtil
 import hcube.scheduler.utils.TimeUtil.TimeMillisFn
 
 import scala.annotation.tailrec
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 trait Scheduler {
 
@@ -45,6 +50,16 @@ class LoopScheduler(
   }
 
   private def tick(t0: Long, t1: Long): Unit = {
+    Await.result(backend.pullJobs(), Duration.Inf)
+      .foreach { jobSpec =>
+        jobSpec.triggers
+          .flatMap(trigger => trigger.next(t0))
+          .find(triggerTime => triggerTime < t1)
+          .foreach(execute(_, jobSpec))
+      }
+  }
+
+  private def execute(time: Long, jobSpec: JobSpec): Unit = {
 
   }
 

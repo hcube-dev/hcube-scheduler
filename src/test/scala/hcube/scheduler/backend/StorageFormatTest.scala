@@ -8,13 +8,13 @@ import org.specs2.mutable.Specification
 class StorageFormatTest extends Specification {
 
   "json serialize/deserialize" >> {
-    val now = Instant.now()
-    val start = now.plusSeconds(60)
+    val now = System.currentTimeMillis()
+    val start = now + 60000
     val format = new JsonStorageFormat
     val jobSpec = JobSpec(
       jobId = "asdf1234",
       triggers = Seq(TimeTriggerSpec(start), CronTriggerSpec("* * * * *")),
-      creation = now,
+      creationTime = now,
       policy = RetryExecPolicy(RetryFailurePolicy()),
       typ = "http",
       name = Some("name"),

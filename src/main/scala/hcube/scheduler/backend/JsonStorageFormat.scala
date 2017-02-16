@@ -31,8 +31,8 @@ object TriggerSpecSerializer extends CustomSerializer[TriggerSpec](format => (
           val cronType = (obj \ "cronType").extract[String]
           CronTriggerSpec(cron, cronType)
         case "time" =>
-          val start = (obj \ "start").extract[Instant]
-          val interval = (obj \ "interval").extract[Duration]
+          val start = (obj \ "start").extract[Long]
+          val interval = (obj \ "interval").extract[Long]
           val repeat = (obj \ "repeat").extract[Int]
           TimeTriggerSpec(start, interval, repeat)
         case x => throw new MappingException(s"Unknown trigger type: $triggerType")
@@ -48,8 +48,8 @@ object TriggerSpecSerializer extends CustomSerializer[TriggerSpec](format => (
           ("cronType" -> cronType)
         case TimeTriggerSpec(start, interval, repeat) =>
           ("triggerType" -> "time") ~
-          ("start" -> start.toEpochMilli) ~
-          ("interval" -> interval.toMillis) ~
+          ("start" -> start) ~
+          ("interval" -> interval) ~
           ("repeat" -> repeat)
       }
   }
