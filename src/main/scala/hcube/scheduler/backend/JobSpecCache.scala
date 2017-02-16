@@ -69,7 +69,7 @@ trait JobSpecCache extends Backend {
 
 }
 
-private object JobSpecCache {
+private[backend] object JobSpecCache {
 
   private val logger = Logger(getClass)
 
