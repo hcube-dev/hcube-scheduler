@@ -70,7 +70,7 @@ class LoopScheduler(
     backend.transition(InitialState, RunningState, trace).foreach {
       case TransitionSuccess(_) =>
         Try(jobDispatch(jobSpec.typ)(time, jobSpec.payload)) match {
-          case _: Success[Unit] =>
+          case _: Success[_] =>
             val successExecState = ExecState(SuccessState, currentTimeMillis())
             backend.transition(RunningState, SuccessState,
               trace.copy(history = successExecState :: trace.history))
