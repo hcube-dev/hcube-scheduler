@@ -25,6 +25,7 @@ class LoopScheduler(
     * [t0, t1] - time boundaries for current interval
     * t0 - beginning time of the current interval
     * t1 - end time of the current interval
+    * t1 = t0 + delta
     */
   @tailrec private def loop(now: Long): Unit = {
     val t0 = nextInterval(now)
