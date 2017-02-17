@@ -48,7 +48,10 @@ class EtcdBackend(
         .withRange(ByteString.copyFrom(statusPath(jobId) + MaxTimeKey, charset))
         .withLimit(numberOfJobsToPreserve)
         .build()).asScala
-      .map(response => response.getKvsList.lastOption.map(keyValue => keyValue.getKey))
+      .map(response => {
+        val keys = response.getKvsList
+        if (keys.length == numberOfJobsToPreserve) keys.lastOption.map(_.getKey) else None
+      })
 
     lastKeyToPreserve.flatMap((lastKey: Option[ByteString]) => {
       lastKey.map(key => {
