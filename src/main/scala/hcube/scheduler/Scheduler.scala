@@ -3,8 +3,10 @@ package hcube.scheduler
 import com.typesafe.scalalogging.Logger
 import hcube.scheduler.backend.Backend
 import hcube.scheduler.backend.Backend._
+import hcube.scheduler.cleanup.CleanUpTask
 import hcube.scheduler.job.Job
 import hcube.scheduler.model.{ExecState, ExecTrace, JobSpec}
+import hcube.scheduler.tasks.TaskRunner
 import hcube.scheduler.utils.TimeUtil.TimeMillisFn
 
 import scala.annotation.tailrec
