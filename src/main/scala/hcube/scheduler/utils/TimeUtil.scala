@@ -10,17 +10,4 @@ object TimeUtil {
 
   val UTC: ZoneId = ZoneId.of("UTC")
 
-  @tailrec def sleep(ms: Long, currentTimeMillis: TimeMillisFn = System.currentTimeMillis): Unit = {
-    val t0 = currentTimeMillis()
-    try {
-      Thread.sleep(ms)
-    } catch {
-      case _: InterruptedException =>
-        val diff = currentTimeMillis() - t0
-        if (diff < ms) {
-          sleep(ms - diff, currentTimeMillis)
-        }
-    }
-  }
-
 }
