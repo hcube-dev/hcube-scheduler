@@ -74,7 +74,7 @@ class LoopScheduler(
     backend.transition(InitialState, RunningState, trace).foreach {
       case TransitionSuccess(_) =>
         Try(jobDispatch(jobSpec.typ)(time, jobSpec.payload)) match {
-          case _: Success[Unit] =>
+          case _: Success[_] =>
             logger.debug(s"Job execution succeeded, jobId: ${jobSpec.jobId}")
             val successExecState = ExecState(SuccessState, currentTimeMillis())
             backend.transition(RunningState, SuccessState,
