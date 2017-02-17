@@ -24,7 +24,7 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.1" % "optiona
 libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.8" % "test"
 libraryDependencies += "org.specs2" %% "specs2-mock" % "3.8.8" % "test"
 libraryDependencies += "org.mockito" % "mockito-all" % "1.10.19" % "test"
-libraryDependencies += "com.jayway.awaitility" % "awaitility-scala" % "1.7.0"
+libraryDependencies += "com.jayway.awaitility" % "awaitility-scala" % "1.7.0" % "test"
 
 libraryDependencies in DistConfig := Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.1",
