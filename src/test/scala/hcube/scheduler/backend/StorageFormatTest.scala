@@ -1,7 +1,5 @@
 package hcube.scheduler.backend
 
-import java.time.Instant
-
 import hcube.scheduler.model._
 import org.specs2.mutable.Specification
 

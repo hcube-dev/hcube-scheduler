@@ -1,7 +1,5 @@
 package hcube.scheduler.model
 
-import java.time.Duration
-
 
 trait FailurePolicy {
 
@@ -26,7 +24,7 @@ trait ExecPolicy {
 case class RetryExecPolicy(
   failurePolicy: FailurePolicy,
   limit: Int = 1,
-  retryPeriod: Duration = Duration.ZERO
+  retryPeriod: Long = 0
 ) extends ExecPolicy {
 
   override def apply(): Unit = ???

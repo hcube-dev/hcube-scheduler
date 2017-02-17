@@ -88,7 +88,7 @@ object ExecPolicySerializer extends CustomSerializer[ExecPolicy](format => (
         case "retry" =>
           val failurePolicy = read[FailurePolicy]((obj \ "failurePolicy").extract[String])
           val limit = (obj \ "limit").extract[Int]
-          val retryPeriod = read[Duration]((obj \ "retryPeriod").extract[String])
+          val retryPeriod = (obj \ "retryPeriod").extract[Long]
           RetryExecPolicy(failurePolicy, limit, retryPeriod)
       }
   },
@@ -103,7 +103,7 @@ object ExecPolicySerializer extends CustomSerializer[ExecPolicy](format => (
           ("execPolicyType" -> "retry") ~
           ("failurePolicy" -> write(failurePolicy)) ~
           ("limit" -> limit) ~
-          ("retryPeriod" -> write(retryPeriod))
+          ("retryPeriod" -> retryPeriod)
       }
   }
 ))
