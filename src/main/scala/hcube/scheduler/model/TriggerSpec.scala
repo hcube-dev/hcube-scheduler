@@ -24,7 +24,7 @@ case class CronTriggerSpec(cron: String, cronType: String = "UNIX") extends Trig
   private val execTime = ExecutionTime.forCron(parser.parse(cron))
 
   override def next(now: Long): Option[Long] = {
-    val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(now), TimeUtil.UTC)
+    val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(now - 1), TimeUtil.UTC)
     Some(execTime.nextExecution(dateTime).toInstant.toEpochMilli)
   }
 
