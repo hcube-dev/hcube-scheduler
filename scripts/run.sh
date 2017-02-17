@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 BASE_DIR=${BASE_DIR:-"$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"}
 
-LOGBACK_FILE=${LOGBACK_FILE:-$BASE_DIR/conf/logback-boot.xml}
+LOGBACK_FILE=${LOGBACK_FILE:-$BASE_DIR/conf/logback.xml}
 DEBUG_PORT=${DEBUG_PORT:-5000}
 DEBUG_SUSPEND=${DEBUG_SUSPEND:-n}
 
