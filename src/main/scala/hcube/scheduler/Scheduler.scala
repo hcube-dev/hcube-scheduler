@@ -5,14 +5,13 @@ import hcube.scheduler.backend.Backend
 import hcube.scheduler.backend.Backend._
 import hcube.scheduler.job.Job
 import hcube.scheduler.model.{ExecState, ExecTrace, JobSpec}
-import hcube.scheduler.utils.TimeUtil
 import hcube.scheduler.utils.TimeUtil.TimeMillisFn
 
 import scala.annotation.tailrec
-import scala.concurrent.{Await, ExecutionContext}
-import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
 import scala.compat.Platform._
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
+import scala.util.{Failure, Success, Try}
 
 trait Scheduler {
 
@@ -26,14 +25,27 @@ class LoopScheduler(
   delta: Long = 1000,
   tolerance: Long = 50,
   commitSuccess: Boolean = false,
-  currentTimeMillis: TimeMillisFn = System.currentTimeMillis
+  continueOnInterrupt: Boolean = false,
+  currentTimeMillis: TimeMillisFn = System.currentTimeMillis,
+  stopTime: Option[Long] = None
 )(
   implicit val ec: ExecutionContext
 ) extends Scheduler {
 
   import LoopScheduler._
 
-  override def apply(): Unit = loop(currentTimeMillis())
+  override def apply(): Unit = interruptHandler()
+
+  @tailrec private def interruptHandler(): Unit = {
+    try {
+      loop(currentTimeMillis())
+    } catch {
+      case _: InterruptedException =>
+        if (continueOnInterrupt) {
+          interruptHandler()
+        }
+    }
+  }
 
   private def nextInterval(now: Long): Long = (now / delta) * delta + delta
 
@@ -44,13 +56,19 @@ class LoopScheduler(
     * t1 = t0 + delta
     */
   @tailrec private def loop(now: Long): Unit = {
+    if (stopTime.isDefined && stopTime.forall(t => now >= t)) {
+      // stop scheduler at given time, used in tests
+      logger.info("Stop time reached")
+      return
+    }
+
     val t0 = nextInterval(now)
     val t1 = t0 + delta
 
     val diff = t0 - now
     if (diff > tolerance) {
       // sleep until interval starts
-      TimeUtil.sleep(diff, currentTimeMillis)
+      Thread.sleep(diff)
     }
 
     tick(t0, t1)
