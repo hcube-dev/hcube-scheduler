@@ -32,7 +32,7 @@ case class CronTriggerSpec(cron: String, cronType: String = "UNIX") extends Trig
 
 case class TimeTriggerSpec(
   startMillis: Long,
-  intervalMillis: Long = 0,
+  intervalMillis: Long = 60000,
   repeat: Int = 1
 ) extends TriggerSpec {
 
