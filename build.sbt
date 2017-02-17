@@ -67,6 +67,8 @@ copyFiles := {
   log.info(s"Copying confs to $confDest")
   IoUtils.copyIfChanged(PathFinder(baseDirectory.value / "conf" / "logback.xml"),
     confDest, msg => log.info(msg))
+  IoUtils.copyIfChanged(PathFinder(baseDirectory.value / "conf" / "scheduler.conf"),
+    confDest, msg => log.info(msg))
 }
 
 lazy val dist = taskKey[Unit]("prepare distributable directory")

@@ -22,7 +22,7 @@ object Boot {
   def main(args: Array[String]): Unit = {
     logger.info("Initializing etcd client.")
 
-    val config = props.get("scheduler-conf-file") match {
+    val config = props.get("hcube.scheduler.conf-file") match {
       case Some(url: String) => ConfigFactory.systemProperties()
         .withFallback(ConfigFactory.parseURL(new URL(url)))
       case None => ConfigFactory.load("scheduler")
@@ -33,7 +33,7 @@ object Boot {
 
     val client = EtcdClientBuilder
       .newBuilder()
-      .endpoints(config.getString("etcd.host"))
+      .endpoints(config.getString("hcube.scheduler.etcd.host"))
       .build()
     val jsonFormat = new JsonStorageFormat
 
@@ -41,7 +41,7 @@ object Boot {
     val backend = new EtcdBackend(client, jsonFormat)
       with JobSpecShuffle
       with JobSpecCache {
-      val lifetimeMillis = config.getInt("backend.cache-lifetime-millis")
+      val lifetimeMillis = config.getInt("hcube.scheduler.backend.cacheLifetimeMillis")
     }
 
     logger.info("Starting loop scheduler.")
