@@ -1,4 +1,5 @@
 name := """hcube-scheduler"""
+organization := "hcube"
 
 version := "1.0"
 
@@ -12,23 +13,26 @@ lazy val root = (project in file("."))
 resolvers += Resolver.mavenLocal
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.23"
 libraryDependencies += "org.json4s" %% "json4s-jackson" % "3.5.0"
 libraryDependencies += "com.cronutils" % "cron-utils" % "5.0.5"
 libraryDependencies += "com.coreos" % "jetcd" % "0.1.0-SNAPSHOT"
 
+libraryDependencies += "com.typesafe" % "config" % "1.3.1" % "optional"
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.1" % "optional"
+
 libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.8" % "test"
 libraryDependencies += "org.specs2" %% "specs2-mock" % "3.8.8" % "test"
 libraryDependencies += "org.mockito" % "mockito-all" % "1.10.19" % "test"
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.1" % "test"
 libraryDependencies += "com.jayway.awaitility" % "awaitility-scala" % "1.7.0"
 
 libraryDependencies in DistConfig := Seq(
-  "ch.qos.logback" % "logback-classic" % "1.2.1"
+  "ch.qos.logback" % "logback-classic" % "1.2.1",
+  "com.typesafe" % "config" % "1.3.1" % "optional"
 )
 
 // spec2 options
 scalacOptions in Test ++= Seq("-Yrangepos")
-
 
 lazy val copyLibs = taskKey[Unit]("copy libs to target/dist/lib")
 copyLibs := {
