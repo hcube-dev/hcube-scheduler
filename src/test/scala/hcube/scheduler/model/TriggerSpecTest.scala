@@ -31,15 +31,18 @@ class TriggerSpecTest extends Specification {
   }
 
   "cron trigger" >> {
-    val now = ts("2017-01-06T11:17:07UTC").toEpochMilli
+    val t1 = ts("2017-01-06T11:17:07UTC").toEpochMilli
+    val t2 = ts("2017-01-06T11:17:30UTC").toEpochMilli
     val trigger = CronTriggerSpec("*/15 * * * *")
     val trigger2 = CronTriggerSpec("*/15 * * * * ?", cronType = "QUARTZ")
 
-    val next = trigger.next(now)
-    val next2 = trigger2.next(now)
+    val next = trigger.next(t1)
+    val next2 = trigger2.next(t1)
+    val next3 = trigger2.next(t2)
 
     Some(ts("2017-01-06T11:30:00UTC").toEpochMilli) must_== next
     Some(ts("2017-01-06T11:17:15UTC").toEpochMilli) must_== next2
+    Some(t2) must_== next3
   }
 
 }
