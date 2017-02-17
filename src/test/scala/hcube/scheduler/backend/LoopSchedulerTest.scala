@@ -20,7 +20,7 @@ class LoopSchedulerTest extends Specification with Mockito {
   private val job = mock[Job]
   private val execTrace = mock[ExecTrace]
 
-  private val timeQueue = mutable.Queue(1000L, 1500L, 3000L, 4100L)
+  private val timeQueue = mutable.Queue(1000L, 1500L, 3020L, 4100L)
 
   private val timeFn = () => {
     timeQueue.dequeue()

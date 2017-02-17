@@ -69,10 +69,10 @@ class LoopScheduler(
     }
   }
 
-  private def nextInterval(now: Long): Long = {
+  private def nextInterval(now: Long, tolerance: Long): Long = {
     val currentInterval = (now / delta) * delta
-    if (now == currentInterval) {
-      now
+    if ((now - currentInterval) <= tolerance) {
+      currentInterval
     } else {
       currentInterval + delta
     }
@@ -91,7 +91,7 @@ class LoopScheduler(
       return
     }
 
-    val t0 = nextInterval(now)
+    val t0 = nextInterval(now, tolerance)
     val t1 = t0 + delta
 
     val diff = t0 - now
