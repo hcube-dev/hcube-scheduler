@@ -5,12 +5,14 @@ import com.coreos.jetcd.api.RangeRequest
 import com.coreos.jetcd.op.{Cmp, CmpTarget, Op, Txn}
 import com.coreos.jetcd.options.{GetOption, PutOption}
 import com.google.protobuf.ByteString
+import com.typesafe.scalalogging.Logger
 import hcube.scheduler.backend.Backend.{TransitionFailed, TransitionResult, TransitionSuccess}
 import hcube.scheduler.model.{ExecTrace, JobSpec}
 import hcube.scheduler.utils.ListenableFutureUtil._
 
 import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 class EtcdBackend(
   etcd: EtcdClient,
@@ -20,6 +22,8 @@ class EtcdBackend(
 )(
   implicit override val ec: ExecutionContext
 ) extends Backend {
+
+  import EtcdBackend._
 
   private val kvClient = etcd.getKVClient
 
@@ -36,8 +40,14 @@ class EtcdBackend(
       .get(jobsKey, getRangeOption)
       .asScala
       .map { response =>
-        response.getKvsList.toList.map { kv =>
-          format.deserialize[JobSpec](kv.getValue.toString(charset))
+        response.getKvsList.toList.flatMap { kv =>
+          val json = kv.getValue.toString(charset)
+          Try(format.deserialize[JobSpec](json)) match {
+            case Success(jobSpec) => Some(jobSpec)
+            case Failure(e) =>
+              logger.error(s"Failed deserializing job: $json", e)
+              None
+          }
         }
       }
   }
@@ -77,5 +87,11 @@ class EtcdBackend(
         }
       }
   }
+
+}
+
+object EtcdBackend {
+
+  val logger = Logger(getClass)
 
 }
