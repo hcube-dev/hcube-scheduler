@@ -24,6 +24,7 @@ class LoopScheduler(
   backend: Backend,
   delta: Long = 1000,
   tolerance: Long = 50,
+  commitSuccess: Boolean = false,
   currentTimeMillis: TimeMillisFn = System.currentTimeMillis,
   jobDispatch: (String) => Job = Job.apply
 )(
@@ -76,9 +77,11 @@ class LoopScheduler(
         Try(jobDispatch(jobSpec.typ)(time, jobSpec.payload)) match {
           case _: Success[_] =>
             logger.debug(s"Job execution succeeded, jobId: ${jobSpec.jobId}")
-            val successExecState = ExecState(SuccessState, currentTimeMillis())
-            backend.transition(RunningState, SuccessState,
-              trace.copy(history = successExecState :: trace.history))
+            if (commitSuccess) {
+              val successExecState = ExecState(SuccessState, currentTimeMillis())
+              backend.transition(RunningState, SuccessState,
+                trace.copy(history = successExecState :: trace.history))
+            }
           case Failure(e) =>
             logger.error(s"Job execution failed, jobId: ${jobSpec.jobId}", e)
             val msg = e.getMessage + EOL + e.getStackTrace.mkString("", EOL, EOL)

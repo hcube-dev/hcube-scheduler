@@ -30,10 +30,12 @@ object Boot {
 
     logConfiguration(config)
 
+    val schedulerConfig = config.getConfig("hcube.scheduler")
+
     logger.info("Initializing etcd client.")
     val client = EtcdClientBuilder
       .newBuilder()
-      .endpoints(config.getString("hcube.scheduler.etcd.host"))
+      .endpoints(schedulerConfig.getString("etcd.host"))
       .build()
     val jsonFormat = new JsonStorageFormat
 
@@ -41,11 +43,12 @@ object Boot {
     val backend = new EtcdBackend(client, jsonFormat)
       with JobSpecShuffle
       with JobSpecCache {
-        val lifetimeMillis = config.getInt("hcube.scheduler.backend.cacheLifetimeMillis")
+        val lifetimeMillis = schedulerConfig.getInt("backend.cacheLifetimeMillis")
       }
 
     logger.info("Starting loop scheduler.")
-    val scheduler = new LoopScheduler(backend)
+    val scheduler = new LoopScheduler(backend,
+      commitSuccess = schedulerConfig.getBoolean("loopScheduler.commitSuccess"))
     scheduler()
   }
 
