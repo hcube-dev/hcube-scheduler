@@ -40,7 +40,7 @@ class EtcdBackend(
 
   override def removeOldJobs(jobId: String, numberOfJobsToPreserve: Int): Future[Long] = {
 
-    val firstKeyToPreserve = kvClient.get(ByteString.copyFrom(statusPath(jobId), charset),
+    val lastKeyToPreserve = kvClient.get(ByteString.copyFrom(statusPath(jobId), charset),
       GetOption.newBuilder()
         .withKeysOnly(true)
         .withSortField(RangeRequest.SortTarget.KEY)
@@ -50,8 +50,8 @@ class EtcdBackend(
         .build()).asScala
       .map(response => response.getKvsList.lastOption.map(keyValue => keyValue.getKey))
 
-    firstKeyToPreserve.flatMap((firstKey: Option[ByteString]) => {
-      firstKey.map(key => {
+    lastKeyToPreserve.flatMap((lastKey: Option[ByteString]) => {
+      lastKey.map(key => {
         kvClient.delete(ByteString.copyFrom(statusPath(jobId) + MinTimeKey, charset),
           DeleteOption.newBuilder()
             .withRange(key)
