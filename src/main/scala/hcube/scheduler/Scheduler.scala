@@ -22,11 +22,11 @@ trait Scheduler {
 
 class LoopScheduler(
   backend: Backend,
+  jobDispatch: (String) => Job,
   delta: Long = 1000,
   tolerance: Long = 50,
   commitSuccess: Boolean = false,
-  currentTimeMillis: TimeMillisFn = System.currentTimeMillis,
-  jobDispatch: (String) => Job = Job.apply
+  currentTimeMillis: TimeMillisFn = System.currentTimeMillis
 )(
   implicit val ec: ExecutionContext
 ) extends Scheduler {
