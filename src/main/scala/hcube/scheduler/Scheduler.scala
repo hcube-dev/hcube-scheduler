@@ -1,5 +1,6 @@
 package hcube.scheduler
 
+import com.typesafe.scalalogging.Logger
 import hcube.scheduler.backend.Backend
 import hcube.scheduler.backend.Backend._
 import hcube.scheduler.job.Job
@@ -28,6 +29,8 @@ class LoopScheduler(
 )(
   implicit val ec: ExecutionContext
 ) extends Scheduler {
+
+  import LoopScheduler._
 
   override def apply(): Unit = loop(currentTimeMillis())
 
@@ -65,16 +68,19 @@ class LoopScheduler(
   }
 
   private def execute(time: Long, jobSpec: JobSpec): Unit = {
+    logger.debug(s"Triggering job execution, jobId: ${jobSpec.jobId}")
     val runningExecState = ExecState(RunningState, currentTimeMillis())
     val trace = ExecTrace(jobSpec.jobId, time, List(runningExecState))
     backend.transition(InitialState, RunningState, trace).foreach {
       case TransitionSuccess(_) =>
         Try(jobDispatch(jobSpec.typ)(time, jobSpec.payload)) match {
           case _: Success[Unit] =>
+            logger.debug(s"Job execution succeeded, jobId: ${jobSpec.jobId}")
             val successExecState = ExecState(SuccessState, currentTimeMillis())
             backend.transition(RunningState, SuccessState,
               trace.copy(history = successExecState :: trace.history))
           case Failure(e) =>
+            logger.error(s"Job execution failed, jobId: ${jobSpec.jobId}", e)
             val msg = e.getMessage + EOL + e.getStackTrace.mkString("", EOL, EOL)
             val failureExecState = ExecState(FailureState, currentTimeMillis(), msg)
             backend.transition(RunningState, FailureState,
@@ -83,5 +89,11 @@ class LoopScheduler(
       case TransitionFailed(_) => ()
     }
   }
+
+}
+
+object LoopScheduler {
+
+  val logger = Logger(getClass)
 
 }

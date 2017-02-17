@@ -57,6 +57,7 @@ trait JobSpecCache extends Backend {
     newState.nextState.foreach(future => {
       future.onComplete {
         case Success(nextState) =>
+          logger.debug("JobSpec cache updated")
           cacheState = nextState
         case Failure(exc) =>
           logger.error("Cannot update JobSpec cache.", exc)
