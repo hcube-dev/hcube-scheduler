@@ -122,6 +122,8 @@ class JobSpecCacheTest extends Specification with Mockito with AwaitilitySupport
     override def pullJobs() = fn
 
     override def transition(prevStatus: String, newStatus: String, trace: ExecTrace) = ???
+
+    override def removeOldJobs(jobId: String, numberOfJobsToPreserve: Int) = ???
   }
 
 }

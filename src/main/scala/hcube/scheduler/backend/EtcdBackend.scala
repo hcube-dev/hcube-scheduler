@@ -3,7 +3,7 @@ package hcube.scheduler.backend
 import com.coreos.jetcd.EtcdClient
 import com.coreos.jetcd.api.RangeRequest
 import com.coreos.jetcd.op.{Cmp, CmpTarget, Op, Txn}
-import com.coreos.jetcd.options.{GetOption, PutOption}
+import com.coreos.jetcd.options.{DeleteOption, GetOption, PutOption}
 import com.google.protobuf.ByteString
 import com.typesafe.scalalogging.Logger
 import hcube.scheduler.backend.Backend.{TransitionFailed, TransitionResult, TransitionSuccess}
@@ -25,6 +25,9 @@ class EtcdBackend(
 
   import EtcdBackend._
 
+  private val MaxTimeKey = "9999999999999"
+  private val MinTimeKey = "0000000000000"
+
   private val kvClient = etcd.getKVClient
 
   private val jobsKey = ByteString.copyFrom(dir + "/job/", charset)
@@ -34,6 +37,29 @@ class EtcdBackend(
     .withSortOrder(RangeRequest.SortOrder.ASCEND)
     .withRange(endKey)
     .build()
+
+  override def removeOldJobs(jobId: String, numberOfJobsToPreserve: Int): Future[Long] = {
+
+    val firstKeyToPreserve = kvClient.get(ByteString.copyFrom(statusPath(jobId), charset),
+      GetOption.newBuilder()
+        .withKeysOnly(true)
+        .withSortField(RangeRequest.SortTarget.KEY)
+        .withSortOrder(RangeRequest.SortOrder.DESCEND)
+        .withRange(ByteString.copyFrom(statusPath(jobId) + MaxTimeKey, charset))
+        .withLimit(numberOfJobsToPreserve)
+        .build()).asScala
+      .map(response => response.getKvsList.lastOption.map(keyValue => keyValue.getKey))
+
+    firstKeyToPreserve.flatMap((firstKey: Option[ByteString]) => {
+      firstKey.map(key => {
+        kvClient.delete(ByteString.copyFrom(statusPath(jobId) + MinTimeKey, charset),
+          DeleteOption.newBuilder()
+            .withRange(key)
+            .build())
+          .asScala.map(result => result.getDeleted)
+      }).getOrElse(Future.successful(0L))
+    })
+  }
 
   override def pullJobs(): Future[Seq[JobSpec]] = {
     kvClient
@@ -87,6 +113,8 @@ class EtcdBackend(
         }
       }
   }
+
+  private def statusPath(jobId: String) = dir + s"/exec/status/$jobId/"
 
 }
 

@@ -13,6 +13,8 @@ trait Backend {
 
   def transition(prevState: String, newState: String, trace: ExecTrace): Future[TransitionResult]
 
+  def removeOldJobs(jobId: String, numberOfJobsToPreserve: Int): Future[Long]
+
 }
 
 object Backend {

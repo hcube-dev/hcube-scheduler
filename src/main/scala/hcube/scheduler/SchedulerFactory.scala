@@ -32,7 +32,7 @@ object SchedulerFactory {
       commitSuccess = config.getBoolean("loopScheduler.commitSuccess"))
 
     new RootScheduler(backend, loopScheduler, config.getBoolean("cleanUp.disable"),
-      config.getLong("cleanUp.delayMillis"))
+      config.getLong("cleanUp.delayMillis"), config.getInt("cleanUp.jobsCount"))
   }
 
 }
