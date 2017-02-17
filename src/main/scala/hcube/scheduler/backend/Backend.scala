@@ -24,7 +24,7 @@ object Backend {
   case class TransitionFailed(trace: ExecTrace) extends TransitionResult
 
   val InitialState = ""
-  val RunningState = "running"
+  val TriggeredState = "triggered"
   val SuccessState = "success"
   val FailureState = "failure"
 

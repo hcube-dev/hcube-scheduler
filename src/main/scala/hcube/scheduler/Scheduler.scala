@@ -88,23 +88,23 @@ class LoopScheduler(
 
   private def execute(time: Long, jobSpec: JobSpec): Unit = {
     logger.debug(s"Triggering job execution, jobId: ${jobSpec.jobId}")
-    val runningExecState = ExecState(RunningState, currentTimeMillis())
+    val runningExecState = ExecState(TriggeredState, currentTimeMillis())
     val trace = ExecTrace(jobSpec.jobId, time, List(runningExecState))
-    backend.transition(InitialState, RunningState, trace).foreach {
+    backend.transition(InitialState, TriggeredState, trace).foreach {
       case TransitionSuccess(_) =>
         Try(jobDispatch(jobSpec.typ)(time, jobSpec.payload)) match {
           case _: Success[_] =>
             logger.debug(s"Job execution succeeded, jobId: ${jobSpec.jobId}")
             if (commitSuccess) {
               val successExecState = ExecState(SuccessState, currentTimeMillis())
-              backend.transition(RunningState, SuccessState,
+              backend.transition(TriggeredState, SuccessState,
                 trace.copy(history = successExecState :: trace.history))
             }
           case Failure(e) =>
             logger.error(s"Job execution failed, jobId: ${jobSpec.jobId}", e)
             val msg = e.getMessage + EOL + e.getStackTrace.mkString("", EOL, EOL)
             val failureExecState = ExecState(FailureState, currentTimeMillis(), msg)
-            backend.transition(RunningState, FailureState,
+            backend.transition(TriggeredState, FailureState,
               trace.copy(history = failureExecState :: trace.history))
         }
       case TransitionFailed(_) => ()
