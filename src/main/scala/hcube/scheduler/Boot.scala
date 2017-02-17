@@ -19,13 +19,12 @@ object Boot {
 
   def main(args: Array[String]): Unit = {
     logger.info("Loading configuration.")
-    val config = props.get("hcube.scheduler.conf-file") match {
+    val config = (props.get("hcube.scheduler.conf-file") match {
       case Some(url: String) => ConfigFactory.systemProperties()
         .withFallback(ConfigFactory.parseURL(new URL(url)))
       case None => ConfigFactory.load("scheduler")
         .withFallback(ConfigFactory.parseFile(new File("conf/scheduler.conf")))
-        .withFallback(ConfigFactory.load("default-scheduler"))
-    }
+    }).withFallback(ConfigFactory.load("default-scheduler"))
     logConfiguration(config)
 
     val scheduler = SchedulerFactory(config.getConfig("hcube.scheduler"))
