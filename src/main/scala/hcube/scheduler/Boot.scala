@@ -20,8 +20,7 @@ object Boot {
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   def main(args: Array[String]): Unit = {
-    logger.info("Initializing etcd client.")
-
+    logger.info("Loading configuration.")
     val config = props.get("hcube.scheduler.conf-file") match {
       case Some(url: String) => ConfigFactory.systemProperties()
         .withFallback(ConfigFactory.parseURL(new URL(url)))
@@ -31,6 +30,7 @@ object Boot {
 
     logConfiguration(config)
 
+    logger.info("Initializing etcd client.")
     val client = EtcdClientBuilder
       .newBuilder()
       .endpoints(config.getString("hcube.scheduler.etcd.host"))
@@ -41,8 +41,8 @@ object Boot {
     val backend = new EtcdBackend(client, jsonFormat)
       with JobSpecShuffle
       with JobSpecCache {
-      val lifetimeMillis = config.getInt("hcube.scheduler.backend.cacheLifetimeMillis")
-    }
+        val lifetimeMillis = config.getInt("hcube.scheduler.backend.cacheLifetimeMillis")
+      }
 
     logger.info("Starting loop scheduler.")
     val scheduler = new LoopScheduler(backend)
