@@ -19,6 +19,24 @@ trait Scheduler {
 
 }
 
+class RootScheduler(
+  backend: Backend,
+  scheduler: Scheduler,
+  disableCleanUp: Boolean,
+  cleanUpDelayMillis: Long
+) extends Scheduler {
+
+  val runner = new TaskRunner(1)
+
+  override def apply() = {
+    if (!disableCleanUp) {
+      runner.schedule(CleanUpTask(backend), cleanUpDelayMillis)
+    }
+    scheduler()
+    runner.shutdown()
+  }
+}
+
 class LoopScheduler(
   backend: Backend,
   jobDispatch: (String) => Job,

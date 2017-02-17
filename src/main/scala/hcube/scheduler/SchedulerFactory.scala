@@ -15,21 +15,24 @@ object SchedulerFactory {
   def apply(config: Config)(implicit ec: ExecutionContext): Scheduler = {
     logger.info("Initializing etcd client.")
     val client = EtcdClientBuilder
-    .newBuilder()
-    .endpoints(config.getString("etcd.host"))
-    .build()
+      .newBuilder()
+      .endpoints(config.getString("etcd.host"))
+      .build()
     val jsonFormat = new JsonStorageFormat
 
     logger.info("Instantiating etcd backend.")
     val backend = new EtcdBackend(client, jsonFormat)
       with JobSpecShuffle
       with JobSpecCache {
-        val lifetimeMillis = config.getInt("backend.cacheLifetimeMillis")
-      }
+      val lifetimeMillis = config.getInt("backend.cacheLifetimeMillis")
+    }
 
     logger.info("Creating loop scheduler.")
-    new LoopScheduler(backend, Job.createDefaultDispatcher,
+    val loopScheduler = new LoopScheduler(backend, Job.createDefaultDispatcher,
       commitSuccess = config.getBoolean("loopScheduler.commitSuccess"))
+
+    new RootScheduler(backend, loopScheduler, config.getBoolean("cleanUp.disable"),
+      config.getLong("cleanUp.delayMillis"))
   }
 
 }
