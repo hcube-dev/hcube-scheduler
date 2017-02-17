@@ -74,7 +74,7 @@ class LoopSchedulerTest extends Specification with Mockito {
     MockitoMockito.verify(job, MockitoMockito.times(3))
       .apply(timeArg.capture(), payloadArg.capture())
 
-    List(1000L, 2000L, 3000L) should_== timeArg.getAllValues.toList
+    Set(1000L, 2000L, 3000L) should_== timeArg.getAllValues.toSet
   }
 
 }
