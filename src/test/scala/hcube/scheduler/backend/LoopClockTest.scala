@@ -24,7 +24,7 @@ class LoopClockTest extends Specification with Mockito {
 
   private val sleep = mock[SleepFn]
 
-  "scheduler" >> {
+  "generate expected tick intervals" >> {
     val clock = new LoopClock(
       executor,
       delta = 1000,
