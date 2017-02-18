@@ -2,18 +2,12 @@ package hcube.scheduler
 
 import com.typesafe.scalalogging.Logger
 import hcube.scheduler.backend.Backend
-import hcube.scheduler.backend.Backend._
 import hcube.scheduler.cleanup.CleanUpTask
-import hcube.scheduler.job.Job
-import hcube.scheduler.model.{ExecState, ExecTrace, JobSpec}
 import hcube.scheduler.tasks.TaskRunner
-import hcube.scheduler.utils.TimeUtil.TimeMillisFn
+import hcube.scheduler.utils.TimeUtil.{SleepFn, TimeMillisFn}
 
 import scala.annotation.tailrec
-import scala.compat.Platform._
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext
 
 trait Scheduler {
 
@@ -40,22 +34,23 @@ class RootScheduler(
   }
 }
 
-class LoopScheduler(
-  backend: Backend,
-  jobDispatch: (String) => Job,
+trait Tickable {
+
+  def tick(t0: Long, t1: Long): Unit
+
+}
+
+class LoopClock(
+  tickable: Tickable,
   delta: Long = 1000,
   tolerance: Long = 50,
-  commitSuccess: Boolean = false,
   continueOnInterrupt: Boolean = false,
   currentTimeMillis: TimeMillisFn = System.currentTimeMillis,
-  currentTimeMillisJob: TimeMillisFn = System.currentTimeMillis,
-  sleep: (Long) => Unit = Thread.sleep,
+  sleep: SleepFn = Thread.sleep,
   stopTime: Option[Long] = None
-)(
-  implicit val ec: ExecutionContext
 ) extends Scheduler {
 
-  import LoopScheduler._
+  import LoopClock._
 
   override def apply(): Unit = interruptHandler()
 
@@ -70,29 +65,20 @@ class LoopScheduler(
     }
   }
 
-  private def nextInterval(now: Long, tolerance: Long): Long = {
-    val currentInterval = (now / delta) * delta
-    if ((now - currentInterval) <= tolerance) {
-      currentInterval
-    } else {
-      currentInterval + delta
-    }
-  }
-
   /**
     * [t0, t1] - time boundaries for current interval
     * t0 - beginning time of the current interval
     * t1 - end time of the current interval
     * t1 = t0 + delta
     */
-  @tailrec private def loop(now: Long): Unit = {
+  @tailrec private def loop(now: Long, prev: Long = 0L): Unit = {
     if (stopTime.isDefined && stopTime.forall(t => now >= t)) {
       // stop scheduler at given time, used in tests
       logger.info("Stop time reached")
       return
     }
 
-    val t0 = nextInterval(now, tolerance)
+    val t0 = nextInterval(now, prev)
     val t1 = t0 + delta
 
     val diff = t0 - now
@@ -101,49 +87,24 @@ class LoopScheduler(
       sleep(diff)
     }
 
-    tick(t0, t1)
+    tickable.tick(t0, t1)
 
-    loop(currentTimeMillis())
+    loop(currentTimeMillis(), prev = t0)
   }
 
-  private def tick(t0: Long, t1: Long): Unit = {
-    Await.result(backend.pullJobs(), Duration.Inf)
-      .foreach { jobSpec =>
-        jobSpec.triggers
-          .flatMap(trigger => trigger.next(t0))
-          .find(triggerTime => triggerTime < t1)
-          .foreach(execute(_, jobSpec))
-      }
-  }
-
-  private def execute(time: Long, jobSpec: JobSpec): Unit = {
-    logger.debug(s"Triggering job execution, jobId: ${jobSpec.jobId}")
-    val runningExecState = ExecState(TriggeredState, currentTimeMillisJob())
-    val trace = ExecTrace(jobSpec.jobId, time, List(runningExecState))
-    backend.transition(InitialState, TriggeredState, trace).foreach {
-      case TransitionSuccess(_) =>
-        Try(jobDispatch(jobSpec.typ)(time, jobSpec.payload)) match {
-          case _: Success[_] =>
-            logger.debug(s"Job execution succeeded, jobId: ${jobSpec.jobId}")
-            if (commitSuccess) {
-              val successExecState = ExecState(SuccessState, currentTimeMillisJob())
-              backend.transition(TriggeredState, SuccessState,
-                trace.copy(history = successExecState :: trace.history))
-            }
-          case Failure(e) =>
-            logger.error(s"Job execution failed, jobId: ${jobSpec.jobId}", e)
-            val msg = e.getMessage + EOL + e.getStackTrace.mkString("", EOL, EOL)
-            val failureExecState = ExecState(FailureState, currentTimeMillisJob(), msg)
-            backend.transition(TriggeredState, FailureState,
-              trace.copy(history = failureExecState :: trace.history))
-        }
-      case TransitionFailed(_) => ()
+  private def nextInterval(now: Long, prev: Long): Long = {
+    val currentInterval = (now / delta) * delta
+    if ((now - currentInterval) <= tolerance && currentInterval != prev) {
+      currentInterval
+    } else {
+      val t0 = currentInterval + delta
+      if (t0 > prev) t0 else t0 + delta
     }
   }
 
 }
 
-object LoopScheduler {
+object LoopClock {
 
   val logger = Logger(getClass)
 

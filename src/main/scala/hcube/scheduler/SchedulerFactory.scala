@@ -28,10 +28,11 @@ object SchedulerFactory {
     }
 
     logger.info("Creating loop scheduler.")
-    val loopScheduler = new LoopScheduler(backend, Job.createDefaultDispatcher,
+    val jobExecutor = new JobExecutor(backend, Job.createDefaultDispatcher,
       commitSuccess = config.getBoolean("loopScheduler.commitSuccess"))
+    val clock = new LoopClock(jobExecutor)
 
-    new RootScheduler(backend, loopScheduler, config.getBoolean("cleanUp.disable"),
+    new RootScheduler(backend, clock, config.getBoolean("cleanUp.disable"),
       config.getLong("cleanUp.delayMillis"), config.getInt("cleanUp.jobsCount"))
   }
 
