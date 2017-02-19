@@ -27,13 +27,29 @@ object SchedulerFactory {
       val lifetimeMillis = config.getInt("backend.cacheLifetimeMillis")
     }
 
-    logger.info("Creating loop scheduler.")
-    val jobExecutor = new JobExecutor(backend, Job.createDefaultDispatcher,
-      commitSuccess = config.getBoolean("loopScheduler.commitSuccess"))
-    val clock = new LoopClock(jobExecutor)
+    logger.info("Creating job executor.")
+    val jobExecutor = new JobExecutor(
+      backend,
+      Job.createDefaultDispatcher,
+      commitSuccess = config.getBoolean("executor.commitSuccess")
+    )
 
-    new RootScheduler(backend, clock, config.getBoolean("cleanUp.disable"),
-      config.getLong("cleanUp.delayMillis"), config.getInt("cleanUp.jobsCount"))
+    logger.info("Creating clock.")
+    val clock = new LoopClock(
+      jobExecutor,
+      delta = config.getLong("clock.deltaMillis"),
+      tolerance = config.getLong("clock.toleranceMillis"),
+      continueOnInterrupt = config.getBoolean("clock.continueOnInterrupt")
+    )
+
+    logger.info("Creating scheduler.")
+    new RootScheduler(
+      backend,
+      clock,
+      config.getBoolean("cleanUp.disable"),
+      config.getLong("cleanUp.delayMillis"),
+      config.getInt("cleanUp.jobsCount")
+    )
   }
 
 }

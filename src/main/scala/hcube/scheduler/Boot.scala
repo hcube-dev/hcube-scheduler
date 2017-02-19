@@ -24,7 +24,7 @@ object Boot {
         .withFallback(ConfigFactory.parseURL(new URL(url)))
       case None => ConfigFactory.load("scheduler")
         .withFallback(ConfigFactory.parseFile(new File("conf/scheduler.conf")))
-    }).withFallback(ConfigFactory.load("default-scheduler"))
+    }).withFallback(ConfigFactory.load("hcube-scheduler-defaults"))
     logConfiguration(config)
 
     val scheduler = SchedulerFactory(config.getConfig("hcube.scheduler"))
