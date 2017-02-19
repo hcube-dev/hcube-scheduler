@@ -1,3 +1,6 @@
 language: scala
 scala:
   - 2.11.8
+before_script:
+  - git clone https://github.com/coreos/jetcd.git
+  - pushd jetcd && mvn -Dmaven.test.skip=true install
