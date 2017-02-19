@@ -1,7 +1,7 @@
 package hcube.scheduler.backend
 
 import hcube.scheduler.utils.TimeUtil.SleepFn
-import hcube.scheduler.{JobExecutor, LoopClock}
+import hcube.scheduler.{LoopClock, Tickable}
 import org.mockito.{ArgumentCaptor, Mockito => MockitoMockito}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -14,7 +14,7 @@ class LoopClockTest extends Specification with Mockito {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  private val executor = mock[JobExecutor]
+  private val tickable = mock[Tickable]
 
   private val timeQueue = mutable.Queue(1000L, 1040L, 1500L, 3020L, 4200L, 6200L, 7000L)
 
@@ -26,7 +26,7 @@ class LoopClockTest extends Specification with Mockito {
 
   "generate expected tick intervals" >> {
     val clock = new LoopClock(
-      executor,
+      tickable,
       delta = 1000,
       tolerance = 50,
       continueOnInterrupt = false,
@@ -39,7 +39,7 @@ class LoopClockTest extends Specification with Mockito {
 
     val t0Arg = ArgumentCaptor.forClass(classOf[Long])
     val t1Arg = ArgumentCaptor.forClass(classOf[Long])
-    MockitoMockito.verify(executor, MockitoMockito.times(6))
+    MockitoMockito.verify(tickable, MockitoMockito.times(6))
       .tick(t0Arg.capture(), t1Arg.capture())
 
     val sleepArg = ArgumentCaptor.forClass(classOf[Long])
