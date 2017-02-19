@@ -24,8 +24,8 @@ object SchedulerFactory {
     val backend = new EtcdBackend(client, jsonFormat)
       with JobSpecShuffle
       with JobSpecCache {
-      val lifetimeMillis = config.getInt("backend.cacheLifetimeMillis")
-    }
+        val lifetimeMillis = config.getInt("backend.cacheLifetimeMillis")
+      }
 
     logger.info("Creating job executor.")
     val jobExecutor = new JobExecutor(
