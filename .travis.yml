@@ -5,4 +5,6 @@ jdk:
   - oraclejdk8
 before_script:
   - git clone https://github.com/coreos/jetcd.git
-  - cd jetcd && mvn -Dmaven.test.skip=true install && cd ..
+  - cd jetcd
+  - git checkout 601afeb89794b4917ff690490d0ebf5de03fba56
+  - mvn -Dmaven.test.skip=true install && cd ..
