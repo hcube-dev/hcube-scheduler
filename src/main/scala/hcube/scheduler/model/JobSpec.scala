@@ -4,7 +4,7 @@ case class JobSpec(
   jobId: String,
   triggers: Seq[TriggerSpec],
   creationTime: Long,
-  policy: ExecPolicy,
+  policy: Option[ExecPolicy],
   typ: String,
   name: Option[String],
   payload: Map[String, Any]
