@@ -7,7 +7,7 @@ import org.json4s.{CustomSerializer, Extraction, JObject, MappingException, NoTy
 
 class JsonStorageFormat extends StorageFormat {
 
-  implicit val formats = Serialization.formats(NoTypeHints) +
+  private implicit val formats = Serialization.formats(NoTypeHints) +
     TriggerSpecSerializer + ExecPolicySerializer + FailurePolicySerializer
 
   override def serialize(obj: AnyRef): String = Serialization.write(obj)
