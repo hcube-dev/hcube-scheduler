@@ -3,7 +3,7 @@ package hcube.scheduler.backend
 import hcube.scheduler.model._
 import org.json4s.JsonDSL._
 import org.json4s.jackson.{JsonMethods, Serialization}
-import org.json4s.{CustomSerializer, DefaultFormats, Extraction, JObject, MappingException, NoTypeHints}
+import org.json4s.{CustomSerializer, Extraction, JObject, MappingException, NoTypeHints}
 
 class JsonStorageFormat extends StorageFormat {
 
