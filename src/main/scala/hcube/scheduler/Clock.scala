@@ -55,7 +55,7 @@ class LoopClock(
       return
     }
 
-    val (t0, t1) = computeInterval(now, prev, tolerance = delta / 2, maxPrevDiff = 3 * delta)
+    val (t0, t1) = computeInterval(now, prev, tolerance = delta / 2, maxPrevDiff = delta)
 
     val diff = t0 - now
     if (diff > tolerance) {
