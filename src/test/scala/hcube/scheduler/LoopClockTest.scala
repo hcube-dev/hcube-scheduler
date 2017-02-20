@@ -1,7 +1,6 @@
-package hcube.scheduler.backend
+package hcube.scheduler
 
 import hcube.scheduler.utils.TimeUtil.SleepFn
-import hcube.scheduler.{LoopClock, Tickable}
 import org.mockito.{ArgumentCaptor, Mockito => MockitoMockito}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -16,7 +15,7 @@ class LoopClockTest extends Specification with Mockito {
 
   private val tickable = mock[Tickable]
 
-  private val timeQueue = mutable.Queue(1000L, 1040L, 1500L, 3020L, 4200L, 6200L, 7000L)
+  private val timeQueue = mutable.Queue(1000L, 1300L, 2040L, 3020L, 4200L, 7200L, 8000L)
 
   private val timeFn = () => {
     timeQueue.dequeue()
@@ -32,7 +31,7 @@ class LoopClockTest extends Specification with Mockito {
       continueOnInterrupt = false,
       currentTimeMillis = timeFn,
       sleep = sleep,
-      stopTime = Some(7000)
+      stopTime = Some(8000)
     )
 
     clock()
@@ -43,13 +42,13 @@ class LoopClockTest extends Specification with Mockito {
       .tick(t0Arg.capture(), t1Arg.capture())
 
     val sleepArg = ArgumentCaptor.forClass(classOf[Long])
-    MockitoMockito.verify(sleep, MockitoMockito.times(5))
+    MockitoMockito.verify(sleep, MockitoMockito.times(4))
       .apply(sleepArg.capture())
 
-    List(1000L, 2000L, 3000L, 4000L, 5000L, 7000L) must_== t0Arg.getAllValues.toList
+    List(1000L, 2000L, 3000L, 4000L, 5000L, 6000L) must_== t0Arg.getAllValues.toList
     List(2000L, 3000L, 4000L, 5000L, 6000L, 8000L) must_== t1Arg.getAllValues.toList
 
-    List(960L, 1500L, 980L, 800L, 800L) must_== sleepArg.getAllValues.toList
+    List(700, 960, 980, 800L) must_== sleepArg.getAllValues.toList
   }
 
 }

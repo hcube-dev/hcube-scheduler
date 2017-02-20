@@ -48,15 +48,14 @@ class LoopClock(
     * t1 - end time of the current interval
     * t1 = t0 + delta
     */
-  @tailrec private def loop(now: Long, prev: Long = 0L): Unit = {
+  @tailrec private def loop(now: Long, prev: Long = Long.MinValue): Unit = {
     if (stopTime.isDefined && stopTime.forall(t => now >= t)) {
       // stop scheduler at given time, used in tests
       logger.info("Stop time reached")
       return
     }
 
-    val t0 = nextInterval(now, prev)
-    val t1 = t0 + delta
+    val (t0, t1) = computeInterval(now, prev, tolerance = delta / 2, maxPrevDiff = 3 * delta)
 
     val diff = t0 - now
     if (diff > tolerance) {
@@ -66,16 +65,36 @@ class LoopClock(
 
     tickable.tick(t0, t1)
 
-    loop(currentTimeMillis(), prev = t0)
+    loop(currentTimeMillis(), prev = t1)
   }
 
-  private def nextInterval(now: Long, prev: Long): Long = {
+  private def computeInterval(
+    now: Long,
+    prev: Long,
+    tolerance: Long,
+    maxPrevDiff: Long
+  ): (Long, Long) = {
     val currentInterval = (now / delta) * delta
-    if ((now - currentInterval) <= tolerance && currentInterval != prev) {
-      currentInterval
+    val prevDiff = currentInterval - prev
+    val nowDiff = now - currentInterval
+
+    if (prevDiff == 0 || prev == Long.MinValue) {
+      if (nowDiff <= tolerance) {
+        (currentInterval, currentInterval + delta)
+      } else {
+        val nextInterval = currentInterval + delta
+        (nextInterval, nextInterval + delta)
+      }
+    } else if (prevDiff > 0 && prevDiff <= maxPrevDiff) {
+      if (nowDiff <= tolerance) {
+        (prev, currentInterval + delta)
+      } else {
+        val nextInterval = currentInterval + delta
+        (prev, nextInterval + delta)
+      }
     } else {
-      val t0 = currentInterval + delta
-      if (t0 > prev) t0 else t0 + delta
+      val nextInterval = currentInterval + delta
+      (nextInterval, nextInterval + delta)
     }
   }
 
