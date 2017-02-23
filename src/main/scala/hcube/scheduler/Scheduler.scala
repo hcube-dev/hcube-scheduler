@@ -8,12 +8,14 @@ import scala.concurrent.ExecutionContext
 
 trait Scheduler {
 
+  val backend: Backend
+
   def apply(): Unit
 
 }
 
 class RootScheduler(
-  backend: Backend,
+  override val backend: Backend,
   clock: Clock,
   cleanUpDisable: Boolean,
   cleanUpDelayMillis: Long,
