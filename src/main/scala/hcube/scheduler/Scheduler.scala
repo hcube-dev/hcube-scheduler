@@ -12,6 +12,8 @@ trait Scheduler {
 
   def apply(): Unit
 
+  def shutdown(): Unit
+
 }
 
 class RootScheduler(
@@ -24,12 +26,14 @@ class RootScheduler(
 
   private val runner = new TaskRunner(1)
 
-  override def apply() = {
+  override def apply(): Unit = {
     if (!cleanUpDisable) {
       runner.schedule(CleanUpTask(backend, cleanUpJobsCount), cleanUpDelayMillis)
     }
     clock()
     runner.shutdown()
   }
+
+  override def shutdown(): Unit = clock.stop()
 
 }

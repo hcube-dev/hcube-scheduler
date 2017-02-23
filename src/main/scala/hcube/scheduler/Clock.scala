@@ -1,5 +1,7 @@
 package hcube.scheduler
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import com.typesafe.scalalogging.Logger
 import hcube.scheduler.utils.TimeUtil.{SleepFn, TimeMillisFn}
 
@@ -8,6 +10,8 @@ import scala.annotation.tailrec
 trait Clock {
 
   def apply(): Unit
+
+  def stop(): Unit
 
 }
 
@@ -29,6 +33,10 @@ class LoopClock(
 
   import LoopClock._
 
+  val stopFlag = new AtomicBoolean(false)
+
+  override def stop(): Unit = stopFlag.set(true)
+
   override def apply(): Unit = interruptHandler()
 
   @tailrec private def interruptHandler(): Unit = {
@@ -49,6 +57,10 @@ class LoopClock(
     * t1 = t0 + delta
     */
   @tailrec private def loop(now: Long, prev: Long = Long.MinValue): Unit = {
+    if (stopFlag.get()) {
+      logger.info("Stopping")
+      return
+    }
     if (stopTime.isDefined && stopTime.forall(t => now >= t)) {
       // stop scheduler at given time, used in tests
       logger.info("Stop time reached")
