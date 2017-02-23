@@ -37,7 +37,7 @@ object SchedulerFactory {
     logger.info("Creating clock.")
     val clock = new LoopClock(
       jobExecutor,
-      delta = config.getLong("clock.deltaMillis"),
+      tickTime = config.getLong("clock.deltaMillis"),
       tolerance = config.getLong("clock.toleranceMillis"),
       continueOnInterrupt = config.getBoolean("clock.continueOnInterrupt")
     )

@@ -34,6 +34,9 @@ class RootScheduler(
     runner.shutdown()
   }
 
-  override def shutdown(): Unit = clock.stop()
+  override def shutdown(): Unit = {
+    clock.stop()
+    runner.shutdown()
+  }
 
 }

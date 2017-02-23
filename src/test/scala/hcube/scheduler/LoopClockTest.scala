@@ -26,7 +26,7 @@ class LoopClockTest extends Specification with Mockito {
   "generate expected tick intervals" >> {
     val clock = new LoopClock(
       tickable,
-      delta = 1000,
+      tickTime = 1000,
       tolerance = 50,
       continueOnInterrupt = false,
       currentTimeMillis = timeFn,

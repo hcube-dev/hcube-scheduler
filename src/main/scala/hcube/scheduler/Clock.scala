@@ -23,7 +23,7 @@ trait Tickable {
 
 class LoopClock(
   tickable: Tickable,
-  delta: Long = 1000,
+  tickTime: Long = 1000,
   tolerance: Long = 50,
   continueOnInterrupt: Boolean = false,
   currentTimeMillis: TimeMillisFn = System.currentTimeMillis,
@@ -35,7 +35,9 @@ class LoopClock(
 
   val stopFlag = new AtomicBoolean(false)
 
-  override def stop(): Unit = stopFlag.set(true)
+  override def stop(): Unit = {
+    stopFlag.set(true)
+  }
 
   override def apply(): Unit = interruptHandler()
 
@@ -67,7 +69,7 @@ class LoopClock(
       return
     }
 
-    val (t0, t1) = computeInterval(now, prev, tolerance = delta / 2, maxPrevDiff = delta)
+    val (t0, t1) = computeInterval(now, prev, tolerance = tickTime / 2, maxPrevDiff = tickTime)
 
     val diff = t0 - now
     if (diff > tolerance) {
@@ -86,27 +88,27 @@ class LoopClock(
     tolerance: Long,
     maxPrevDiff: Long
   ): (Long, Long) = {
-    val currentInterval = (now / delta) * delta
+    val currentInterval = (now / tickTime) * tickTime
     val prevDiff = currentInterval - prev
     val nowDiff = now - currentInterval
 
     if (prevDiff == 0 || prev == Long.MinValue) {
       if (nowDiff <= tolerance) {
-        (currentInterval, currentInterval + delta)
+        (currentInterval, currentInterval + tickTime)
       } else {
-        val nextInterval = currentInterval + delta
-        (nextInterval, nextInterval + delta)
+        val nextInterval = currentInterval + tickTime
+        (nextInterval, nextInterval + tickTime)
       }
     } else if (prevDiff > 0 && prevDiff <= maxPrevDiff) {
       if (nowDiff <= tolerance) {
-        (prev, currentInterval + delta)
+        (prev, currentInterval + tickTime)
       } else {
-        val nextInterval = currentInterval + delta
-        (prev, nextInterval + delta)
+        val nextInterval = currentInterval + tickTime
+        (prev, nextInterval + tickTime)
       }
     } else {
-      val nextInterval = currentInterval + delta
-      (nextInterval, nextInterval + delta)
+      val nextInterval = currentInterval + tickTime
+      (nextInterval, nextInterval + tickTime)
     }
   }
 
