@@ -3,6 +3,10 @@ scala:
   - 2.11.8
 jdk:
   - oraclejdk8
+cache:
+  directories:
+    - "$HOME/.ivy2/cache"
+    - "$HOME/.m2"
 before_script:
   - git clone https://github.com/coreos/jetcd.git
   - cd jetcd
