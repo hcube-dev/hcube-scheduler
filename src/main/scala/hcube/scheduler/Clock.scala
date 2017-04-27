@@ -44,6 +44,7 @@ class ScheduledClock(
       tickReceiver.tick(t0, t1)
     }
 
+    // todo blocking code
     Future {
       blocking {
         val jFuture = scheduler.scheduleAtFixedRate(
