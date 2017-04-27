@@ -35,17 +35,22 @@ object SchedulerFactory {
     )
 
     logger.info("Creating clock.")
-    val clock = new LoopClock(
+    val loopClock = new LoopClock(
       jobExecutor,
-      tickTime = config.getLong("clock.deltaMillis"),
+      tickPeriod = config.getLong("clock.deltaMillis"),
       tolerance = config.getLong("clock.toleranceMillis"),
       continueOnInterrupt = config.getBoolean("clock.continueOnInterrupt")
     )
 
+    val scheduledClock = new ScheduledClock(
+      jobExecutor,
+      tickPeriod = config.getLong("clock.deltaMillis")
+    )
+
     logger.info("Creating scheduler.")
-    new RootScheduler(
+    new DefaultScheduler(
       backend,
-      clock,
+      scheduledClock,
       config.getBoolean("cleanUp.disable"),
       config.getLong("cleanUp.delayMillis"),
       config.getInt("cleanUp.jobsCount")

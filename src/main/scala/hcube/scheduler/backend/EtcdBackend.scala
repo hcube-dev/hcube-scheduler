@@ -8,7 +8,7 @@ import com.google.protobuf.ByteString
 import com.typesafe.scalalogging.Logger
 import hcube.scheduler.backend.Backend.{TransitionFailed, TransitionResult, TransitionSuccess}
 import hcube.scheduler.model.{ExecTrace, JobSpec}
-import hcube.scheduler.utils.ListenableFutureUtil._
+import hcube.scheduler.utils.JavaUtil._
 
 import scala.collection.JavaConversions._
 import scala.concurrent.{ExecutionContext, Future}

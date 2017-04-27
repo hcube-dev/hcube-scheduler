@@ -1,4 +1,4 @@
-package hcube.scheduler.cleanup
+package hcube.scheduler.tasks
 
 import com.typesafe.scalalogging.Logger
 import hcube.scheduler.backend.Backend

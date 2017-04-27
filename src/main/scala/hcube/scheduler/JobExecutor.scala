@@ -19,7 +19,7 @@ class JobExecutor(
   currentTimeMillis: TimeMillisFn = System.currentTimeMillis
 )(
   implicit val ec: ExecutionContext
-) extends Tickable {
+) extends TickReceiver {
 
   import JobExecutor._
 

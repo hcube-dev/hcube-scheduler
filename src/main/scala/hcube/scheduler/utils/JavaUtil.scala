@@ -4,7 +4,7 @@ import com.google.common.util.concurrent.{FutureCallback, Futures, ListenableFut
 
 import scala.concurrent.{Future, Promise}
 
-object ListenableFutureUtil {
+object JavaUtil {
 
   implicit class ListenableFutureExtras[T](lf: ListenableFuture[T]) {
 
@@ -18,5 +18,8 @@ object ListenableFutureUtil {
     }
 
   }
+
+  implicit def functionToRunnable(f: () => Unit): Runnable =
+    new Runnable() { def run(): Unit = f() }
 
 }

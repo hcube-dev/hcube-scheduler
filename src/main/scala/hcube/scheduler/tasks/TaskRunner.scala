@@ -1,24 +1,26 @@
 package hcube.scheduler.tasks
 
-import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
+import java.util.concurrent.{Executors, TimeUnit}
+
+import hcube.scheduler.utils.JavaUtil._
 
 class TaskRunner(numberOfTasks: Int) {
 
-  private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(numberOfTasks)
+  private val scheduler = Executors.newScheduledThreadPool(numberOfTasks)
 
   def schedule(command: () => Unit, delayMillis: Long): Unit = {
-    scheduler.scheduleAtFixedRate(new Runnable {
 
-      @volatile var lastExecution = 0L
-
-      override def run() = {
-        val now = System.currentTimeMillis()
-        if (now - lastExecution >= delayMillis / 2) {
-          command()
-          lastExecution = now
-        }
+    @volatile var lastExecution = 0L
+    def commandFn = () => {
+      val now = System.currentTimeMillis()
+      if (now - lastExecution >= delayMillis / 2) {
+        command()
+        lastExecution = now
       }
-    }, delayMillis, delayMillis, TimeUnit.MILLISECONDS)
+    }
+
+    scheduler.scheduleAtFixedRate(
+      commandFn, delayMillis, delayMillis, TimeUnit.MILLISECONDS)
   }
 
   def shutdown(): Unit = {

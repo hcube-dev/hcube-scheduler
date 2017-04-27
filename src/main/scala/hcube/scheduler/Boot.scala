@@ -6,7 +6,8 @@ import java.net.URL
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.Logger
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 import scala.sys.SystemProperties
 
 object Boot {
@@ -29,7 +30,7 @@ object Boot {
 
     val scheduler = SchedulerFactory(config.getConfig("hcube.scheduler"))
     logger.info("Starting scheduler")
-    scheduler()
+    Await.result(scheduler(), Duration.Inf)
   }
 
   private def logConfiguration(config: Config): Unit = {

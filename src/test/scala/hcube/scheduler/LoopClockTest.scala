@@ -7,13 +7,14 @@ import org.specs2.mutable.Specification
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext}
 
 class LoopClockTest extends Specification with Mockito {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  private val tickable = mock[Tickable]
+  private val tickReceiver = mock[TickReceiver]
 
   private val timeQueue = mutable.Queue(1000L, 1300L, 2040L, 3020L, 4200L, 7200L, 8000L)
 
@@ -25,8 +26,8 @@ class LoopClockTest extends Specification with Mockito {
 
   "generate expected tick intervals" >> {
     val clock = new LoopClock(
-      tickable,
-      tickTime = 1000,
+      tickReceiver,
+      tickPeriod = 1000,
       tolerance = 50,
       continueOnInterrupt = false,
       currentTimeMillis = timeFn,
@@ -34,11 +35,11 @@ class LoopClockTest extends Specification with Mockito {
       stopTime = Some(8000)
     )
 
-    clock()
+    Await.result(clock(), Duration.Inf)
 
     val t0Arg = ArgumentCaptor.forClass(classOf[Long])
     val t1Arg = ArgumentCaptor.forClass(classOf[Long])
-    MockitoMockito.verify(tickable, MockitoMockito.times(6))
+    MockitoMockito.verify(tickReceiver, MockitoMockito.times(6))
       .tick(t0Arg.capture(), t1Arg.capture())
 
     val sleepArg = ArgumentCaptor.forClass(classOf[Long])
