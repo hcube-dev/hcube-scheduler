@@ -5,39 +5,28 @@ BASE_DIR=${BASE_DIR:-"$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"}
 ETCD_SIZE=${ETCD_SIZE:-3}
 SCHED_SIZE=${SCHED_SIZE:-3}
 NET=${NET:-hcube}
+NAME_PREFIX=${NAME_PREFIX:-hcube-scheduler}
 
 
 # create network
 docker network create --driver bridge ${NET}
 if [ $? -ne 0 ]; then
-    # remove existing containers
-    i=0
-    while [ ${i} -lt ${ETCD_SIZE} ]; do
-        name=hcube-scheduler-etcd-${i}
-        docker rm -f ${name}
-        ((i++))
-    done
-    i=0
-    while [ ${i} -lt ${SCHED_SIZE} ]; do
-        name=hcube-scheduler-${i}
-        docker rm -f ${name}
-        ((i++))
-    done
+    source ${BASE_DIR}/scripts/remove-dev-cluster.sh
 fi
 
 # run etcd cluster
-INITIAL_ETCD_CLUSTER_TOKEN="hcube-scheduler-etcd-token-${ETCD_SIZE}"
+INITIAL_ETCD_CLUSTER_TOKEN="${NAME_PREFIX}-etcd-token-${ETCD_SIZE}"
 INITIAL_ETCD_CLUSTER=""
 i=0
 while [ ${i} -lt ${ETCD_SIZE} ]; do
-    name=hcube-scheduler-etcd-${i}
+    name="${NAME_PREFIX}-etcd-${i}"
     INITIAL_ETCD_CLUSTER+="$name=http://$name:2380,"
     ((i++))
 done
 
 i=0
 while [ ${i} -lt ${ETCD_SIZE} ]; do
-    name="hcube-scheduler-etcd-${i}"
+    name="${NAME_PREFIX}-etcd-${i}"
     docker run \
         --net hcube \
         --name ${name} \
@@ -66,7 +55,7 @@ ${BASE_DIR}/docker/docker-build.sh
 # run scheduler cluster
 i=0
 while [ ${i} -lt ${SCHED_SIZE} ]; do
-    name="hcube-scheduler-${i}"
+    name="${NAME_PREFIX}-${i}"
     docker run \
         --net hcube \
         --name ${name} \
