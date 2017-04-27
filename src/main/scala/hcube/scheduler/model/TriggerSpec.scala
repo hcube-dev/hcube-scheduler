@@ -6,6 +6,7 @@ import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.model.time.ExecutionTime
 import com.cronutils.parser.CronParser
+import com.typesafe.config.Config
 import hcube.scheduler.utils.TimeUtil
 
 
@@ -50,6 +51,24 @@ case class TimeTriggerSpec(
       } else {
         None
       }
+    }
+  }
+
+}
+
+object TriggerSpec {
+
+  def fromConfig(config: Config): TriggerSpec = {
+    config.getString("triggerType") match {
+      case "cron" =>
+        val cron = config.getString("cron")
+        val cronType = config.getString("cronType")
+        CronTriggerSpec(cron, cronType)
+      case "time" =>
+        val startMillis = config.getLong("startMillis")
+        val intervalMillis = config.getLong("intervalMillis")
+        val repeat = config.getInt("repeat")
+        TimeTriggerSpec(startMillis, intervalMillis, repeat)
     }
   }
 

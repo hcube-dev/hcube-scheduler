@@ -15,6 +15,8 @@ trait Backend {
 
   def removeOldJobs(jobId: String, numberOfJobsToPreserve: Int): Future[Long]
 
+  def put(job: JobSpec): Future[String]
+
 }
 
 object Backend {

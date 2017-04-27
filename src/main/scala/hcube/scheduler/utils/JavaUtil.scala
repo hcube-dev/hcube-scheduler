@@ -8,7 +8,7 @@ object JavaUtil {
 
   implicit class ListenableFutureExtras[T](lf: ListenableFuture[T]) {
 
-    def asScala: Future[T] = {
+    def toScalaFuture: Future[T] = {
       val p = Promise[T]()
       Futures.addCallback(lf, new FutureCallback[T] {
         def onFailure(t: Throwable): Unit = p failure t

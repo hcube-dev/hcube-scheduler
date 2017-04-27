@@ -47,7 +47,7 @@ class EtcdBackend(
         .withSortOrder(RangeRequest.SortOrder.DESCEND)
         .withRange(ByteString.copyFrom(statusPath(jobId) + MaxTimeKey, charset))
         .withLimit(numberOfJobsToPreserve)
-        .build()).asScala
+        .build()).toScalaFuture
       .map(response => {
         val keys = response.getKvsList
         if (keys.length == numberOfJobsToPreserve) keys.lastOption.map(_.getKey) else None
@@ -59,7 +59,7 @@ class EtcdBackend(
           DeleteOption.newBuilder()
             .withRange(key)
             .build())
-          .asScala.map(result => result.getDeleted)
+          .toScalaFuture.map(result => result.getDeleted)
       }).getOrElse(Future.successful(0L))
     })
   }
@@ -67,7 +67,7 @@ class EtcdBackend(
   override def pullJobs(): Future[Seq[JobSpec]] = {
     kvClient
       .get(jobsKey, getRangeOption)
-      .asScala
+      .toScalaFuture
       .map { response =>
         response.getKvsList.toList.flatMap { kv =>
           val json = kv.getValue.toString(charset)
@@ -107,7 +107,7 @@ class EtcdBackend(
 
     kvClient
       .commit(txn)
-      .asScala
+      .toScalaFuture
       .map { response =>
         if (response.getSucceeded && response.getResponsesCount == 2) {
           TransitionSuccess(trace)
@@ -115,6 +115,15 @@ class EtcdBackend(
           TransitionFailed(trace)
         }
       }
+  }
+
+  def put(job: JobSpec): Future[String] = {
+    val key = s"$dir/job/${job.jobId}"
+    val bsKey = ByteString.copyFrom(key, charset)
+    kvClient
+      .put(bsKey, ByteString.copyFrom(format.serialize(job), charset), PutOption.DEFAULT)
+      .toScalaFuture
+      .map(_ => key)
   }
 
   private def statusPath(jobId: String) = dir + s"/exec/status/$jobId/"

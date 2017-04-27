@@ -5,7 +5,9 @@ import com.typesafe.config.Config
 import com.typesafe.scalalogging.Logger
 import hcube.scheduler.backend.{EtcdBackend, JobSpecCache, JobSpecShuffle, JsonStorageFormat}
 import hcube.scheduler.job.Job
+import hcube.scheduler.model.JobSpec
 
+import scala.collection.JavaConversions._
 import scala.concurrent.ExecutionContext
 
 object SchedulerFactory {
@@ -25,6 +27,14 @@ object SchedulerFactory {
       with JobSpecShuffle
       with JobSpecCache {
         val lifetimeMillis = config.getInt("backend.cacheLifetimeMillis")
+      }
+
+    logger.info("Adding jobs defined in config.")
+    config.getConfigList("jobs")
+      .foreach { c =>
+        backend
+          .put(JobSpec.fromConfig(c))
+          .onComplete(r => logger.info(s"Job add status: $r"))
       }
 
     logger.info("Creating job executor.")
