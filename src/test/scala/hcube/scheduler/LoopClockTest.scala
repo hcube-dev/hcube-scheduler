@@ -1,7 +1,7 @@
 package hcube.scheduler
 
 import hcube.scheduler.utils.TimeUtil.SleepFn
-import org.mockito.{ArgumentCaptor, Mockito => MockitoMockito}
+import org.mockito.{ArgumentCaptor, Mockito => MockitoOrig}
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 
@@ -14,17 +14,15 @@ class LoopClockTest extends Specification with Mockito {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
-  private val tickReceiver = mock[TickReceiver]
-
-  private val timeQueue = mutable.Queue(1000L, 1300L, 2040L, 3020L, 4200L, 7200L, 8000L)
-
-  private val timeFn = () => {
-    timeQueue.dequeue()
-  }
-
-  private val sleep = mock[SleepFn]
 
   "generate expected tick intervals" >> {
+    val tickReceiver = mock[TickReceiver]
+    val timeQueue = mutable.Queue(1000L, 1300L, 2040L, 3020L, 4200L, 7200L, 8000L)
+    val timeFn = () => {
+      timeQueue.dequeue()
+    }
+    val sleep = mock[SleepFn]
+
     val clock = new LoopClock(
       tickReceiver,
       tickPeriod = 1000,
@@ -39,11 +37,11 @@ class LoopClockTest extends Specification with Mockito {
 
     val t0Arg = ArgumentCaptor.forClass(classOf[Long])
     val t1Arg = ArgumentCaptor.forClass(classOf[Long])
-    MockitoMockito.verify(tickReceiver, MockitoMockito.times(6))
+    MockitoOrig.verify(tickReceiver, MockitoOrig.times(6))
       .tick(t0Arg.capture(), t1Arg.capture())
 
     val sleepArg = ArgumentCaptor.forClass(classOf[Long])
-    MockitoMockito.verify(sleep, MockitoMockito.times(4))
+    MockitoOrig.verify(sleep, MockitoOrig.times(4))
       .apply(sleepArg.capture())
 
     List(1000L, 2000L, 3000L, 4000L, 5000L, 6000L) must_== t0Arg.getAllValues.toList
