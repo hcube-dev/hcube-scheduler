@@ -11,8 +11,6 @@ import scala.concurrent.{Await, ExecutionContext}
 
 class EtcdBackendTest extends Specification {
 
-  args(skipAll = true)
-
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   private val df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
