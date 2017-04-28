@@ -9,6 +9,8 @@ val DistConfig = config("DistConfig")
 lazy val root = (project in file("."))
   .configs(DistConfig)
   .settings(inConfig(DistConfig)(Classpaths.ivyBaseSettings): _*)
+  .configs(IntegrationTest)
+  .settings(Defaults.itSettings: _*)
 
 resolvers += Resolver.mavenLocal
 
@@ -21,10 +23,10 @@ libraryDependencies += "com.coreos" % "jetcd" % "0.1.0-SNAPSHOT"
 libraryDependencies += "com.typesafe" % "config" % "1.3.1" % "optional"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.1" % "optional"
 
-libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.8" % "test"
-libraryDependencies += "org.specs2" %% "specs2-mock" % "3.8.8" % "test"
-libraryDependencies += "org.mockito" % "mockito-all" % "1.10.19" % "test"
-libraryDependencies += "com.jayway.awaitility" % "awaitility-scala" % "1.7.0" % "test"
+libraryDependencies += "org.specs2" %% "specs2-core" % "3.8.8" % "test,it"
+libraryDependencies += "org.specs2" %% "specs2-mock" % "3.8.8" % "test,it"
+libraryDependencies += "org.mockito" % "mockito-all" % "1.10.19" % "test,it"
+libraryDependencies += "com.jayway.awaitility" % "awaitility-scala" % "1.7.0" % "test,it"
 
 libraryDependencies in DistConfig := Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.1",
@@ -33,6 +35,7 @@ libraryDependencies in DistConfig := Seq(
 
 // spec2 options
 scalacOptions in Test ++= Seq("-Yrangepos")
+scalacOptions in IntegrationTest ++= Seq("-Yrangepos")
 
 lazy val copyLibs = taskKey[Unit]("copy libs to target/dist/lib")
 copyLibs := {

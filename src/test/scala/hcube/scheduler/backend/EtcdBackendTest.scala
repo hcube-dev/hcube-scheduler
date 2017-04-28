@@ -20,7 +20,7 @@ class EtcdBackendTest extends Specification {
 
   val client = EtcdClientBuilder
     .newBuilder()
-    .endpoints("http://hcube-etcd-v3-1-0-node-0:2379")
+    .endpoints("http://hcube-scheduler-etcd-0:2379")
     .build()
   val jsonFormat = new JsonStorageFormat
   val backend = new EtcdBackend(client, jsonFormat)
@@ -32,7 +32,7 @@ class EtcdBackendTest extends Specification {
     1 must_== 1
   }
 
-  "update CAS" >> {
+  "transition" >> {
     val time = ts("2017-01-06T11:17:07UTC").toEpochMilli
     val trace = ExecTrace("qwer5", time, Nil)
     val future = backend.transition("running", "success", trace)
