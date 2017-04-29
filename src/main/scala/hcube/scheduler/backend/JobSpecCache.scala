@@ -14,9 +14,9 @@ trait JobSpecCache extends Backend {
 
   @volatile private[backend] var cacheState = CacheState(Empty, None, Nil, 0)
 
-  abstract override def pullJobs(): Future[Seq[JobSpec]] = {
+  abstract override def pull(): Future[Seq[JobSpec]] = {
     val currentState = cacheState
-    val state = updateCacheState(currentState, System.currentTimeMillis(), super.pullJobs())
+    val state = updateCacheState(currentState, System.currentTimeMillis(), super.pull())
       .map(newState => updateInternalState(currentState, newState))
       .getOrElse(currentState)
     Future.successful(state.cache)

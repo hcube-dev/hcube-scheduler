@@ -24,7 +24,7 @@ class EtcdBackendTest extends Specification {
   val backend = new EtcdBackend(client, jsonFormat)
 
   "pull jobs" >> {
-    val future = backend.pullJobs()
+    val future = backend.pull()
     val jobs = Await.result(future, Duration.Inf)
 
     1 must_== 1

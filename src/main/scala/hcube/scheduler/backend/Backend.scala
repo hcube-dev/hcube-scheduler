@@ -9,13 +9,15 @@ trait Backend {
 
   implicit val ec: ExecutionContext
 
-  def pullJobs(): Future[Seq[JobSpec]]
+  def pull(): Future[Seq[JobSpec]]
 
   def transition(prevState: String, newState: String, trace: ExecTrace): Future[TransitionResult]
 
-  def removeOldJobs(jobId: String, numberOfJobsToPreserve: Int): Future[Long]
+  def cleanup(jobId: String, numberOfJobsToPreserve: Int): Future[Long]
 
   def put(job: JobSpec): Future[String]
+
+  def delete(jobId: String): Future[String]
 
 }
 

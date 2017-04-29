@@ -29,17 +29,17 @@ class JobSpecCacheTest extends Specification with Mockito with AwaitilitySupport
     }
 
     Awaitility.await until {
-      Await.result(backend.pullJobs(), 10 seconds).isEmpty
+      Await.result(backend.pull(), 10 seconds).isEmpty
     }
 
     // Wait for the fist update.
     Awaitility.await until {
-      Await.result(backend.pullJobs(), 10 seconds).equals(Seq(jobSpec))
+      Await.result(backend.pull(), 10 seconds).equals(Seq(jobSpec))
     }
 
     // Wait for cache expiration and the next update.
     Awaitility.await until {
-      Await.result(backend.pullJobs(), 10 seconds).equals(Seq(jobSpecSecond))
+      Await.result(backend.pull(), 10 seconds).equals(Seq(jobSpecSecond))
     }
 
     1 must_== 1
@@ -119,13 +119,15 @@ class JobSpecCacheTest extends Specification with Mockito with AwaitilitySupport
 
     override implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-    override def pullJobs() = fn
+    override def pull() = fn
 
     override def transition(prevStatus: String, newStatus: String, trace: ExecTrace) = ???
 
-    override def removeOldJobs(jobId: String, numberOfJobsToPreserve: Int) = ???
+    override def cleanup(jobId: String, numberOfJobsToPreserve: Int) = ???
 
     override def put(job: JobSpec): Future[String] = ???
+
+    override def delete(jobId: String): Future[String] = ???
 
   }
 

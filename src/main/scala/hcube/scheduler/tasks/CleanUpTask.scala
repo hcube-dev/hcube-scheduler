@@ -14,7 +14,7 @@ case class CleanUpTask(
   import CleanUpTask._
 
   def cleanUpJobsForJobSpec(jobSpec: JobSpec): Unit = {
-    backend.removeOldJobs(jobSpec.jobId, numberOfJobsToRemove).onComplete {
+    backend.cleanup(jobSpec.jobId, numberOfJobsToRemove).onComplete {
       case Success(deleted) =>
         if (deleted > 0) {
           logger.debug(s"Cleaned '$deleted' jobs for JobSpec: '${jobSpec.jobId}'.")
@@ -27,7 +27,7 @@ case class CleanUpTask(
   }
 
   override def apply() = {
-    backend.pullJobs().foreach(jobSpec => jobSpec.foreach(cleanUpJobsForJobSpec))
+    backend.pull().foreach(jobSpec => jobSpec.foreach(cleanUpJobsForJobSpec))
   }
 
 }

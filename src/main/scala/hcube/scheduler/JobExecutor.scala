@@ -24,7 +24,7 @@ class JobExecutor(
   import JobExecutor._
 
   override def tick(t0: Long, t1: Long): Unit = {
-    val jobs = Await.result(backend.pullJobs(), Duration.Inf)
+    val jobs = Await.result(backend.pull(), Duration.Inf)
     logger.debug(s"Tick, t0: $t0, t1: $t1, jobs: ${jobs.size}")
     jobs.foreach { jobSpec =>
       jobSpec.triggers
