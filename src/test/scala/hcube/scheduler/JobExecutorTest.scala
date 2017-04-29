@@ -30,7 +30,6 @@ class JobExecutorTest extends Specification with MockitoSpecs2 {
     there was one(backend).pullJobs()
     there was one(backend).transition(M.eq(InitialState), M.eq(TriggeredState), M.any[ExecTrace])
     there was one(trigger).next(M.anyLong())
-    there was one(jobDispatch).apply(M.anyString())
     there was one(job).apply(M.eq(1L), M.any())
   }
 
