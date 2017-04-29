@@ -1,9 +1,9 @@
 package hcube.scheduler.backend
 
-import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
 
 import com.coreos.jetcd.EtcdClientBuilder
-import hcube.scheduler.model.ExecTrace
+import hcube.scheduler.model.{CronTriggerSpec, JobSpec}
 import org.specs2.mutable.Specification
 
 import scala.concurrent.duration.Duration
@@ -13,30 +13,50 @@ class EtcdBackendTest extends Specification {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  private val df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-  private def ts(str: String) = df.parse(str).toInstant
-
-  val client = EtcdClientBuilder
-    .newBuilder()
-    .endpoints("http://hcube-scheduler-etcd-0:2379")
-    .build()
   val jsonFormat = new JsonStorageFormat
-  val backend = new EtcdBackend(client, jsonFormat)
 
-  "pull jobs" >> {
-    val future = backend.pull()
-    val jobs = Await.result(future, Duration.Inf)
+  val job1 = JobSpec(
+    jobId = "job1",
+    triggers = Seq(CronTriggerSpec("* * * * *")),
+    creationTime = System.currentTimeMillis(),
+    policy = None,
+    typ = "log",
+    name = None,
+    payload = Map[String, Any]("foo" -> 1)
+  )
 
-    1 must_== 1
-  }
+  val job2 = JobSpec(
+    jobId = "job2",
+    triggers = Seq(CronTriggerSpec("* * * * *")),
+    creationTime = System.currentTimeMillis(),
+    policy = None,
+    typ = "log",
+    name = None,
+    payload = Map[String, Any]("bar" -> 2)
+  )
 
-  "transition" >> {
-    val time = ts("2017-01-06T11:17:07UTC").toEpochMilli
-    val trace = ExecTrace("qwer5", time, Nil)
-    val future = backend.transition("running", "success", trace)
-    val result = Await.result(future, Duration.Inf)
+  "crud" >> {
+    val client = EtcdClientBuilder
+      .newBuilder()
+      .endpoints("http://hcube-scheduler-etcd-0:2379")
+      .build()
+    val backend = new EtcdBackend(client, jsonFormat)
 
-    1 must_== 1
+    val job1Key = Await.result(backend.put(job1), Duration(10, TimeUnit.SECONDS))
+    val job2Key = Await.result(backend.put(job2), Duration(10, TimeUnit.SECONDS))
+
+    val jobs = Await.result(backend.pull(), Duration(10, TimeUnit.SECONDS))
+
+    jobs must contain(job1)
+    jobs must contain(job2)
+
+    Await.result(backend.delete(job1.jobId), Duration(15, TimeUnit.SECONDS))
+    Await.result(backend.delete(job2.jobId), Duration(15, TimeUnit.SECONDS))
+
+    val jobs2 = Await.result(backend.pull(), Duration(10, TimeUnit.SECONDS))
+
+    jobs2 must not contain(job1)
+    jobs2 must not contain(job2)
   }
 
 }
