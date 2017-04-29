@@ -1,8 +1,8 @@
 package hcube.scheduler
 
 import hcube.scheduler.utils.TimeUtil.SleepFn
-import org.mockito.{ArgumentCaptor, Mockito => MockitoOrig}
-import org.specs2.mock.Mockito
+import org.mockito.{ArgumentCaptor, Mockito}
+import org.specs2.mock.{Mockito => MockitoSpecs2}
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConversions._
@@ -10,7 +10,7 @@ import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
-class LoopClockTest extends Specification with Mockito {
+class LoopClockTest extends Specification with MockitoSpecs2 {
 
   implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
 
@@ -37,11 +37,11 @@ class LoopClockTest extends Specification with Mockito {
 
     val t0Arg = ArgumentCaptor.forClass(classOf[Long])
     val t1Arg = ArgumentCaptor.forClass(classOf[Long])
-    MockitoOrig.verify(tickReceiver, MockitoOrig.times(6))
+    Mockito.verify(tickReceiver, Mockito.times(6))
       .tick(t0Arg.capture(), t1Arg.capture())
 
     val sleepArg = ArgumentCaptor.forClass(classOf[Long])
-    MockitoOrig.verify(sleep, MockitoOrig.times(4))
+    Mockito.verify(sleep, Mockito.times(4))
       .apply(sleepArg.capture())
 
     List(1000L, 2000L, 3000L, 4000L, 5000L, 6000L) must_== t0Arg.getAllValues.toList
