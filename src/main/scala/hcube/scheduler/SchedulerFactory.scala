@@ -45,13 +45,12 @@ object SchedulerFactory {
     )
 
     logger.info("Creating clock.")
-    val loopClock = new LoopClock(
-      jobExecutor,
-      tickPeriod = config.getLong("clock.deltaMillis"),
-      tolerance = config.getLong("clock.toleranceMillis"),
-      continueOnInterrupt = config.getBoolean("clock.continueOnInterrupt")
-    )
-
+//    val loopClock = new LoopClock(
+//      jobExecutor,
+//      tickPeriod = config.getLong("clock.deltaMillis"),
+//      tolerance = config.getLong("clock.toleranceMillis"),
+//      continueOnInterrupt = config.getBoolean("clock.continueOnInterrupt")
+//    )
     val scheduledClock = new ScheduledClock(
       jobExecutor,
       tickPeriod = config.getLong("clock.deltaMillis")
